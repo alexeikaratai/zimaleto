@@ -3,34 +3,57 @@ import { type SnowfallOptions, useSnowfall } from "./useSnowfall";
 
 /** Props for `<Snowfall>`: every core option, `paused`, `fullscreen`, and the attributes of a `<canvas>`. */
 export type SnowfallProps = SnowfallOptions & {
-    /** Covers the viewport with a fixed canvas instead of filling the parent. */
-    fullscreen?: boolean;
+    /**
+     * Covers the viewport with a fixed canvas instead of filling the parent. Render it outside ancestors with a
+     * `transform` or `filter`, which would make it cover them instead.
+     */
+    fullscreen?: boolean | undefined;
 } & Omit<ComponentProps<"canvas">, keyof SnowfallOptions | "fullscreen" | "width" | "height" | "children">;
 
-// Props with these names configure the snowfall; every other prop goes to the canvas.
-const OPTION_NAMES =
-    "count density size speed wind gust sway rotation opacity color shapes parallax fps maxDpr reducedMotion pauseWhenHidden seed paused";
-const OPTION_LIST = OPTION_NAMES.split(" ");
+type PropValues = Record<string, unknown>;
 
-type Words<Text extends string> = Text extends `${infer Word} ${infer Rest}` ? Word | Words<Rest> : Text;
-// Fails to compile when the core gains an option that the list above doesn't name.
-type AssertNever<Value extends never> = Value;
-type _EveryOptionIsListed = AssertNever<Exclude<keyof SnowfallOptions, Words<typeof OPTION_NAMES>>>;
+// Props with these names configure the snowfall; every other prop goes to the canvas.
+// The type fails the build when the core gains an option that isn't listed here.
+const OPTION_NAMES: Record<keyof SnowfallOptions, true> = {
+    count: true,
+    density: true,
+    size: true,
+    speed: true,
+    wind: true,
+    gust: true,
+    sway: true,
+    rotation: true,
+    opacity: true,
+    color: true,
+    shapes: true,
+    parallax: true,
+    fps: true,
+    maxDpr: true,
+    reducedMotion: true,
+    pauseWhenHidden: true,
+    seed: true,
+    paused: true,
+};
 
 /**
  * A canvas with snow falling in it. By default it fills its parent, which needs a `position`
  * other than `static`; `fullscreen` covers the viewport instead. Clicks pass through either way.
+ * Options compare by value, but custom shapes compare by identity, so create them once.
  *
  * @example
- * <Snowfall fullscreen count={200} wind={15} shapes={[crystal]} paused={!isWinter} />
+ * <Snowfall fullscreen count={200} wind={15} shapes={[crystal]} paused={isPaused} />
  */
 export function Snowfall({ fullscreen, style, ref, ...props }: SnowfallProps): ReactElement {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const options: Record<string, unknown> = {};
-    const canvasProps: Record<string, unknown> = {};
+    const options: PropValues = {};
+    const canvasProps: PropValues = {};
 
     for (const [name, value] of Object.entries(props)) {
-        (OPTION_LIST.includes(name) ? options : canvasProps)[name] = value;
+        if (Object.hasOwn(OPTION_NAMES, name)) {
+            options[name] = value;
+        } else {
+            canvasProps[name] = value;
+        }
     }
 
     // A canvas is a replaced element, so inset alone wouldn't stretch it.

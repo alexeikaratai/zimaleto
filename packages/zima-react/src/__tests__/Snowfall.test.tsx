@@ -2,7 +2,7 @@ import { cleanup, render } from "@testing-library/react";
 import { createRef, StrictMode } from "react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { Snowfall } from "../Snowfall";
-import { core, sparkle } from "./snowMock";
+import { core, liveSnow, sparkle } from "./snowMock";
 
 vi.mock("@zimaleto/zima", async () => {
     const { core: mockedCore } = await import("./snowMock");
@@ -20,16 +20,42 @@ function renderedCanvas(container: HTMLElement): HTMLCanvasElement {
 }
 
 describe("<Snowfall> lifecycle", () => {
-    test("creates one snowfall on mount and destroys it on unmount", () => {
+    test("creates one snowfall on mount", () => {
+        render(<Snowfall />);
+
+        expect(core.instances).toHaveLength(1);
+    });
+
+    test("destroys its snowfall on unmount", () => {
         const { unmount } = render(<Snowfall />);
-        const createdCount = core.instances.length;
 
         unmount();
 
-        expect([createdCount, core.instances[0]?.isDestroyed]).toEqual([1, true]);
+        expect(core.instances[0]?.isDestroyed).toBe(true);
     });
 
-    test("keeps exactly one live snowfall under StrictMode", () => {
+    test("snows on its own canvas", () => {
+        const { container } = render(<Snowfall />);
+
+        expect(core.instances[0]?.target).toBe(renderedCanvas(container));
+    });
+
+    test("passes only the snow options from its props to the core", () => {
+        render(
+            <Snowfall
+                count={5}
+                wind={3}
+                paused={false}
+                className="snow"
+            />,
+        );
+
+        expect(core.instances[0]?.options).toStrictEqual({ count: 5, wind: 3 });
+    });
+});
+
+describe("<Snowfall> under StrictMode", () => {
+    test("keeps exactly one live snowfall", () => {
         render(
             <StrictMode>
                 <Snowfall />
@@ -39,17 +65,30 @@ describe("<Snowfall> lifecycle", () => {
         expect(core.instances.filter((snow) => !snow.isDestroyed)).toHaveLength(1);
     });
 
-    test("snows on its own canvas with the options from its props", () => {
-        const { container } = render(
-            <Snowfall
-                count={5}
-                wind={3}
-                paused={false}
-                className="snow"
-            />,
+    test("sends prop changes to the live snowfall", () => {
+        const { rerender } = render(
+            <StrictMode>
+                <Snowfall wind={3} />
+            </StrictMode>,
         );
 
-        expect(core.createSnow).toHaveBeenCalledWith(renderedCanvas(container), { count: 5, wind: 3 });
+        rerender(
+            <StrictMode>
+                <Snowfall wind={10} />
+            </StrictMode>,
+        );
+
+        expect(liveSnow()?.update.mock.calls).toStrictEqual([[{ wind: 10 }]]);
+    });
+
+    test("keeps the live snowfall paused", () => {
+        render(
+            <StrictMode>
+                <Snowfall paused />
+            </StrictMode>,
+        );
+
+        expect(liveSnow()?.isRunning).toBe(false);
     });
 });
 
@@ -59,7 +98,7 @@ describe("<Snowfall> prop changes", () => {
 
         rerender(<Snowfall wind={10} />);
 
-        expect([core.instances.length, core.instances[0]?.update.mock.calls]).toEqual([1, [[{ wind: 10 }]]]);
+        expect([core.instances.length, core.instances[0]?.update.mock.calls]).toStrictEqual([1, [[{ wind: 10 }]]]);
     });
 
     test("doesn't call update() for new but equal arrays and weighted shapes", () => {
@@ -85,7 +124,7 @@ describe("<Snowfall> prop changes", () => {
 
         rerender(<Snowfall shapes={[{ shape: sparkle, weight: 2 }]} />);
 
-        expect(core.instances[0]?.update).toHaveBeenCalledWith({ shapes: [{ shape: sparkle, weight: 2 }] });
+        expect(core.instances[0]?.update.mock.calls).toStrictEqual([[{ shapes: [{ shape: sparkle, weight: 2 }] }]]);
     });
 
     test("sends a removed prop as undefined, so the core restores its default", () => {
@@ -98,18 +137,23 @@ describe("<Snowfall> prop changes", () => {
 
         rerender(<Snowfall wind={3} />);
 
-        expect(core.instances[0]?.update).toHaveBeenCalledWith({ count: undefined });
+        expect(core.instances[0]?.update.mock.calls).toStrictEqual([[{ count: undefined }]]);
     });
 
-    test("stops and restarts the same snowfall when paused toggles", () => {
+    test("pauses its snowfall when paused is set", () => {
         const { rerender } = render(<Snowfall />);
-        const [snow] = core.instances;
 
         rerender(<Snowfall paused />);
-        const stopsWhilePaused = snow?.stop.mock.calls.length;
+
+        expect([core.instances.length, core.instances[0]?.isRunning]).toStrictEqual([1, false]);
+    });
+
+    test("resumes the same snowfall when paused is cleared", () => {
+        const { rerender } = render(<Snowfall paused />);
+
         rerender(<Snowfall paused={false} />);
 
-        expect([core.instances.length, stopsWhilePaused, snow?.start.mock.calls.length]).toEqual([1, 1, 2]);
+        expect([core.instances.length, core.instances[0]?.isRunning]).toStrictEqual([1, true]);
     });
 });
 
@@ -119,7 +163,7 @@ describe("<Snowfall> canvas", () => {
 
         const { position, inset, width, height, pointerEvents, zIndex } = renderedCanvas(container).style;
 
-        expect({ position, inset, width, height, pointerEvents, zIndex }).toEqual({
+        expect({ position, inset, width, height, pointerEvents, zIndex }).toStrictEqual({
             position: "absolute",
             inset: "0",
             width: "100%",
@@ -134,7 +178,7 @@ describe("<Snowfall> canvas", () => {
 
         const { position, zIndex } = renderedCanvas(container).style;
 
-        expect([position, zIndex]).toEqual(["fixed", "9999"]);
+        expect([position, zIndex]).toStrictEqual(["fixed", "9999"]);
     });
 
     test("lets style override the layout", () => {
@@ -154,6 +198,12 @@ describe("<Snowfall> canvas", () => {
         expect(renderedCanvas(container).getAttribute("aria-hidden")).toBe("true");
     });
 
+    test("lets aria-hidden be turned off", () => {
+        const { container } = render(<Snowfall aria-hidden={false} />);
+
+        expect(renderedCanvas(container).getAttribute("aria-hidden")).toBe("false");
+    });
+
     test("passes className and other canvas attributes through", () => {
         const { container } = render(
             <Snowfall
@@ -164,7 +214,7 @@ describe("<Snowfall> canvas", () => {
         );
         const canvas = renderedCanvas(container);
 
-        expect([canvas.className, canvas.id, canvas.dataset.testid]).toEqual(["snow", "hero-snow", "snow"]);
+        expect([canvas.className, canvas.id, canvas.dataset.testid]).toStrictEqual(["snow", "hero-snow", "snow"]);
     });
 
     test("keeps snow options off the canvas element", () => {
@@ -176,7 +226,7 @@ describe("<Snowfall> canvas", () => {
         );
         const canvas = renderedCanvas(container);
 
-        expect([canvas.hasAttribute("count"), canvas.hasAttribute("maxdpr")]).toEqual([false, false]);
+        expect([canvas.hasAttribute("count"), canvas.hasAttribute("maxdpr")]).toStrictEqual([false, false]);
     });
 
     test("points ref at the canvas", () => {
