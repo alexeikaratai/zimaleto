@@ -1,0 +1,81 @@
+{
+    "name": "@zimaleto/zima-react",
+    "version": "0.0.0",
+    "description": "React wrapper for zima, a tiny canvas snowfall",
+    "keywords": [
+        "snow",
+        "snowfall",
+        "canvas",
+        "animation",
+        "winter",
+        "react"
+    ],
+    "homepage": "https://github.com/alexeikaratai/zimaleto/tree/main/packages/zima-react#readme",
+    "bugs": "https://github.com/alexeikaratai/zimaleto/issues",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/alexeikaratai/zimaleto.git",
+        "directory": "packages/zima-react"
+    },
+    "license": "MIT",
+    "author": "alexeikaratai",
+    "type": "module",
+    "sideEffects": false,
+    "files": [
+        "dist"
+    ],
+    "exports": {
+        ".": "./src/index.ts",
+        "./package.json": "./package.json"
+    },
+    "publishConfig": {
+        "access": "public",
+        "exports": {
+            ".": "./dist/index.js",
+            "./package.json": "./package.json"
+        }
+    },
+    "scripts": {
+        "build": "tsdown",
+        "typecheck": "tsc",
+        "test": "vitest run --coverage",
+        "test:unit": "vitest run --project unit",
+        "size": "size-limit"
+    },
+    "dependencies": {
+        "@zimaleto/zima": "workspace:^"
+    },
+    "peerDependencies": {
+        "react": "^19"
+    },
+    "devDependencies": {
+        "@arethetypeswrong/core": "catalog:",
+        "@size-limit/preset-small-lib": "catalog:",
+        "@testing-library/dom": "^10.4.2",
+        "@testing-library/react": "^16.3.3",
+        "@types/node": "catalog:",
+        "@types/react": "catalog:",
+        "@types/react-dom": "catalog:",
+        "@vitest/coverage-v8": "catalog:",
+        "happy-dom": "^21.0.4",
+        "publint": "catalog:",
+        "react": "catalog:",
+        "react-dom": "catalog:",
+        "size-limit": "catalog:",
+        "tsdown": "catalog:",
+        "typescript": "catalog:",
+        "vitest": "catalog:"
+    },
+    "size-limit": [
+        {
+            "name": "@zimaleto/zima-react",
+            "path": "dist/index.js",
+            "limit": "500 B",
+            "ignore": [
+                "@zimaleto/zima",
+                "react",
+                "react/jsx-runtime"
+            ]
+        }
+    ]
+}

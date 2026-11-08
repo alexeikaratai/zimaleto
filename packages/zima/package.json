@@ -1,0 +1,64 @@
+{
+    "name": "@zimaleto/zima",
+    "version": "0.0.0",
+    "description": "Tiny, zero-dependency canvas snowfall",
+    "keywords": [
+        "snow",
+        "snowfall",
+        "canvas",
+        "animation",
+        "winter"
+    ],
+    "homepage": "https://github.com/alexeikaratai/zimaleto/tree/main/packages/zima#readme",
+    "bugs": "https://github.com/alexeikaratai/zimaleto/issues",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/alexeikaratai/zimaleto.git",
+        "directory": "packages/zima"
+    },
+    "license": "MIT",
+    "author": "alexeikaratai",
+    "type": "module",
+    "sideEffects": false,
+    "files": [
+        "dist"
+    ],
+    "exports": {
+        ".": "./src/index.ts",
+        "./package.json": "./package.json"
+    },
+    "publishConfig": {
+        "access": "public",
+        "exports": {
+            ".": "./dist/index.js",
+            "./package.json": "./package.json"
+        }
+    },
+    "scripts": {
+        "build": "tsdown",
+        "typecheck": "tsc",
+        "test": "vitest run --coverage",
+        "test:unit": "vitest run --project unit",
+        "size": "size-limit"
+    },
+    "devDependencies": {
+        "@arethetypeswrong/core": "catalog:",
+        "@size-limit/preset-small-lib": "catalog:",
+        "@types/node": "catalog:",
+        "@vitest/browser-playwright": "catalog:",
+        "@vitest/coverage-v8": "catalog:",
+        "playwright": "catalog:",
+        "publint": "catalog:",
+        "size-limit": "catalog:",
+        "tsdown": "catalog:",
+        "typescript": "catalog:",
+        "vitest": "catalog:"
+    },
+    "size-limit": [
+        {
+            "name": "@zimaleto/zima",
+            "path": "dist/index.js",
+            "limit": "2 KB"
+        }
+    ]
+}

@@ -1,0 +1,13 @@
+node_modules/
+dist/
+coverage/
+.turbo/
+*.tsbuildinfo
+tsconfig.vitest-temp.json
+*.log
+.DS_Store
+
+# Personal editor and tool settings
+.vscode/*
+!.vscode/extensions.json
+.claude/settings.local.json
