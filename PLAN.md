@@ -2,7 +2,7 @@
 
 > Tiny, zero-dependency canvas snowfall. Framework-agnostic TypeScript core + thin framework wrappers (React first; Vue and Angular later).
 
-Status: **M2 · Shapes** · Last updated: 2026-11-08 · Repo: [alexeikaratai/zimaleto](https://github.com/alexeikaratai/zimaleto) · npm: `@zimaleto/*`
+Status: **M3 · React** · Last updated: 2026-11-08 · Repo: [alexeikaratai/zimaleto](https://github.com/alexeikaratai/zimaleto) · npm: `@zimaleto/*`
 
 Working rules and code style: [CLAUDE.md](CLAUDE.md).
 
@@ -11,7 +11,7 @@ Working rules and code style: [CLAUDE.md](CLAUDE.md).
 ## 1. Goals
 
 - **Tiny core.** `@zimaleto/zima`: zero dependencies, SSR-safe, tree-shakeable, **≤ 2.5 KB min+brotli**.
-- **Thin wrappers.** Each framework gets its own small package on top of the core. `@zimaleto/zima-react` adds **≤ 500 B**; `@zimaleto/zima-vue` and `@zimaleto/zima-angular` follow the same pattern later.
+- **Thin wrappers.** Each framework gets its own small package on top of the core. `@zimaleto/zima-react` adds **≤ 650 B**; `@zimaleto/zima-vue` and `@zimaleto/zima-angular` follow the same pattern later.
 - **Works without a framework.** `createSnow()` with no element puts snow over the whole page, and the same call works from a `<script>` tag through the CDN build.
 - **Configurable flakes.** Count/density, size, fall speed, wind and gusts, sway, rotation, opacity, one color or a list, shape variants (built-in and custom), parallax.
 - **Well-behaved.** Respects `prefers-reduced-motion`, pauses when the tab or canvas is hidden, handles HiDPI, uses `pointer-events: none`, never shifts the page layout.
@@ -101,10 +101,12 @@ zimaleto/
 │     │  ├─ useSnowfall.ts
 │     │  └─ __tests__/
 │     │     ├─ Snowfall.test.tsx
-│     │     ├─ Snowfall.ssr.test.tsx
+│     │     ├─ Snowfall.ssr.test.tsx   # server rendering with the real core
 │     │     ├─ useSnowfall.test.tsx
+│     │     ├─ index.test.ts           # re-exports of the core shapes
 │     │     ├─ directive.dist.test.ts  # the built entry starts with "use client"
-│     │     └─ props.test-d.ts
+│     │     ├─ props.test-d.ts
+│     │     └─ snowMock.ts             # the mocked core shared by the tests
 │     ├─ README.md, LICENSE
 │     ├─ vitest.config.ts      # projects: unit (happy-dom), dist (Node)
 │     └─ tsdown.config.ts
@@ -275,10 +277,10 @@ return <canvas ref={canvasRef} />;
 
 - **React 19 only** (`peerDependencies.react: "^19"`), using `ref` as a prop with no `forwardRef`.
 - **`"use client"`** sits at the top of `src/index.ts` and stays at the top of the build output, so it works in the Next.js App Router out of the box, from source in the workspace and from `dist` when published.
-- **Lifecycle.** The instance is created in `useEffect` and destroyed in cleanup, which is safe under StrictMode's double mount. Prop changes go to `instance.update()`; the instance is never re-created on re-render. Options are compared by value first (arrays element by element, `{ shape, weight }` entries by their fields), so a new but equal `shapes={[crystal]}` or `color={["#fff", "#cfe8ff"]}` on every render doesn't rebuild sprites. A removed prop is passed as `undefined`, which restores its default.
+- **Lifecycle.** The instance is created in `useEffect` and destroyed in cleanup, which is safe under StrictMode's double mount. Prop changes go to `instance.update()`; the instance is never re-created on re-render. Options are compared by value first (arrays element by element, `{ shape, weight }` entries by their fields), so a new but equal `shapes={[crystal]}` or `color={["#fff", "#cfe8ff"]}` on every render doesn't rebuild sprites. Only the changed keys go to `update()`, so a new but equal `shapes` array next to a changed `wind` leaves the flakes as they are. A removed prop is passed as `undefined`, which restores its default.
 - **`paused`.** `true` calls `stop()`, `false` calls `start()`. `useSnowfall` accepts `paused` in its options too. Reduced motion still wins (§5).
-- **`ref`** points to the `<canvas>`. `useSnowfall` returns nothing in v1: its options and `paused` cover control.
-- **Props** are all core options, plus `fullscreen?: boolean` and `paused?: boolean`, plus canvas attributes (`className`, `style`, `aria-hidden` defaults to `true`). A canvas attribute that shares a name with a core option is left out: React's non-standard `color` attribute would narrow `color` to a string. `width`, `height` and `children` aren't accepted, because the engine manages the canvas size.
+- **`ref`** points to the `<canvas>`. `useSnowfall` returns nothing in v1: its options and `paused` cover control. Its ref has to hold the element when the component mounts.
+- **Props** are all core options, plus `fullscreen?: boolean` and `paused?: boolean`, plus canvas attributes (`className`, `style`, `aria-hidden` defaults to `true`). A canvas attribute that shares a name with a core option is left out: React's non-standard `color` attribute would narrow `color` to a string. `width`, `height` and `children` aren't accepted, because the engine manages the canvas size. `<Snowfall>` tells options from canvas attributes by a list of option names; a type check fails the build if the core gains an option that the list doesn't name.
   - Default layout fills the parent: `position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none`. The parent needs a `position` other than `static`.
   - `fullscreen` gives an overlay: `position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999`, the same as the core overlay. `style` overrides any of these.
 - **`@zimaleto/zima` is a regular dependency** (`workspace:^`), not bundled in, so it's never duplicated. Core's shapes and types are re-exported, so users need only one package.
@@ -293,7 +295,7 @@ return <canvas ref={canvasRef} />;
 - **Size budgets** (size-limit, enforced in CI). A budget is never raised without the owner's approval.
   - `@zimaleto/zima`, `import { createSnow }` (includes the default `dot`): ≤ 2.5 KB brotli (raised from 2 KB in M2, see §10)
   - `@zimaleto/zima`, IIFE build with every shape: ≤ 3 KB brotli
-  - `@zimaleto/zima-react`, excluding core and React: ≤ 500 B brotli
+  - `@zimaleto/zima-react`, `import { Snowfall }` excluding core and React: ≤ 650 B brotli (raised from 500 B in M3, see §10)
 - **Versioning.** Changesets in **fixed** mode for the `@zimaleto/zima*` packages while on 0.x (the private playground stays out). One version for all packages is simpler for users.
 - **Publishing.** The `release` job, the last job of the CI workflow on `main`, runs `changesets/action`. It opens a "Version Packages" PR, and merging that PR runs `changeset publish`, which in a pnpm repo uses `pnpm pack` and `pnpm publish`: they swap in `publishConfig.exports` and rewrite `workspace:^` (plain `npm publish` would do neither). pnpm 12 publishes via **npm Trusted Publishing** (GitHub OIDC; the workflow needs `id-token: write`), which adds provenance and needs no long-lived `NPM_TOKEN`.
 - **Release setup (M5).**
@@ -380,7 +382,7 @@ Tests live in a `__tests__/` folder next to the code they test.
 
 ### `@zimaleto/zima-react`: happy-dom + Testing Library
 
-Core is mocked with `vi.mock`, except in the SSR test, which renders with the real core.
+Core is mocked with `vi.mock` (one shared mock in `__tests__/snowMock.ts`), except in the SSR test, which renders with the real core, and the re-export test.
 
 - **Instance lifecycle**
   - `<Snowfall>` creates exactly one instance on mount and destroys it on unmount.
@@ -499,5 +501,6 @@ Decided on 2026-11-07 unless a row gives another date.
 | Node | 26 LTS via nvm (`.nvmrc`) |
 | Tests | Vitest only (§8), in `__tests__/` folders |
 | CI pipeline (2026-11-08) | One workflow with jobs in a strict order: lint → typecheck → build and size → test, then on `main` deploy (M4) → release (M5). |
+| React size budget (2026-11-08) | `import { Snowfall }` may take up to 650 B brotli instead of 500 B, measured like the core's `import { createSnow }`. Comparing options by value, telling options from canvas attributes, forwarding `ref` and the layout styles need about 590 B. |
 | Core size budget (2026-11-08) | `import { createSnow }` may take up to 2.5 KB brotli instead of 2 KB. The weighted `shapes` option, the sprite cache and image loading add about 300 B, and the M1 engine alone already filled 2 KB. |
 | Repo protection (2026-11-08) | A ruleset on `main`: changes only through PRs, merged only when Lint, Typecheck, Build and size and Test pass on an up-to-date branch; no force push, deletion or bypass, admins included. Squash merge only, with linear history; branches are deleted after merge. Dependabot alerts and security updates, secret scanning with push protection, and private vulnerability reporting are on. |
