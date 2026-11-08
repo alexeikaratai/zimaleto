@@ -4,6 +4,8 @@ coverage/
 .turbo/
 *.tsbuildinfo
 tsconfig.vitest-temp.json
+# Screenshots that Vitest browser mode saves for failed tests
+.vitest/
 *.log
 .DS_Store
 
