@@ -11,7 +11,7 @@ Read [PLAN.md](PLAN.md) before starting any task. It holds the architecture, the
 | Path | Package | What |
 |---|---|---|
 | `packages/zima` | `@zimaleto/zima` | Framework-agnostic core: zero dependencies, ≤ 2.5 KB brotli |
-| `packages/zima-react` | `@zimaleto/zima-react` | React 19 wrapper, ≤ 500 B on top of the core |
+| `packages/zima-react` | `@zimaleto/zima-react` | React 19 wrapper, ≤ 650 B on top of the core |
 | `apps/playground` | — | Vite + React app for manual tuning, deployed to GitHub Pages |
 
 Vue and Angular wrappers come later as their own packages: `@zimaleto/zima-vue` and `@zimaleto/zima-angular`.
