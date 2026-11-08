@@ -1,10 +1,11 @@
-import { createSnow, type Snow, type SnowOptions } from "@zimaleto/zima";
-import { type ReactElement, useEffect, useRef } from "react";
-import type { TargetMode } from "./options";
+import { createSnow, type Snow } from "@zimaleto/zima";
+import { type ReactElement, useEffect, useMemo, useRef } from "react";
+import { type PlaygroundOptions, type TargetMode, toSnowOptions } from "./options";
+import { toShapes } from "./shapes";
 
 export type SnowStageProps = {
     mode: TargetMode;
-    options: SnowOptions;
+    options: PlaygroundOptions;
     paused: boolean;
 };
 
@@ -19,8 +20,10 @@ export function SnowStage({ mode, options, paused }: SnowStageProps): ReactEleme
     const elementRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const snowRef = useRef<Snow | null>(null);
+    // A new shapes array would make the engine give every flake a new look, so it changes only with the weights.
+    const shapes = useMemo(() => toShapes(options.shapeWeights), [options.shapeWeights]);
     // Later changes reach the snow through update(), so creation only needs the first options.
-    const initialOptionsRef = useRef(options);
+    const initialOptionsRef = useRef(toSnowOptions(options, shapes));
 
     useEffect(
         function createSnowForTarget() {
@@ -41,9 +44,9 @@ export function SnowStage({ mode, options, paused }: SnowStageProps): ReactEleme
 
     useEffect(
         function syncOptions() {
-            snowRef.current?.update(options);
+            snowRef.current?.update(toSnowOptions(options, shapes));
         },
-        [options],
+        [options, shapes],
     );
 
     useEffect(
