@@ -2,7 +2,7 @@
 
 > Tiny, zero-dependency canvas snowfall. Framework-agnostic TypeScript core + thin framework wrappers (React first; Vue and Angular later).
 
-Status: **M0 · Scaffold** · Last updated: 2026-11-08 · Repo: [alexeikaratai/zimaleto](https://github.com/alexeikaratai/zimaleto) · npm: `@zimaleto/*`
+Status: **M1 · Core MVP** · Last updated: 2026-11-08 · Repo: [alexeikaratai/zimaleto](https://github.com/alexeikaratai/zimaleto) · npm: `@zimaleto/*`
 
 Working rules and code style: [CLAUDE.md](CLAUDE.md).
 
@@ -85,9 +85,11 @@ zimaleto/
 │  │  │     ├─ random.test.ts
 │  │  │     ├─ shapes.test.ts
 │  │  │     ├─ index.test.ts           # the entry imports in Node without touching the DOM
-│  │  │     ├─ engine.browser.test.ts
+│  │  │     ├─ engine.browser.test.ts  # the engine with a manual clock
+│  │  │     ├─ index.browser.test.ts   # createSnow() with real frames
 │  │  │     ├─ iife.dist.test.ts       # runs the built IIFE (M4)
-│  │  │     └─ api.test-d.ts           # type tests for the public API
+│  │  │     ├─ api.test-d.ts           # type tests for the public API
+│  │  │     └─ support.ts              # manual clock, media query stubs, containers
 │  │  ├─ README.md, LICENSE    # npm packs only what's inside the package folder
 │  │  ├─ vitest.config.ts      # projects: unit (Node), browser (Chromium), dist (Node)
 │  │  └─ tsdown.config.ts
@@ -194,16 +196,16 @@ type Snow = {
 };
 ```
 
-- **No target:** creates a canvas with `position: fixed; inset: 0; pointer-events: none; z-index: 9999`, appended to `<body>`. Its styles can be changed through `snow.canvas`.
-- **A `<canvas>`:** draws on it and leaves its styles alone.
-- **Any other element:** adds a canvas inside it with `position: absolute; inset: 0; pointer-events: none`. If the element is `position: static`, it gets `position: relative`, and `destroy()` restores the original value.
+- **No target:** creates a canvas with `position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999`, appended to `<body>`. Its styles can be changed through `snow.canvas`. A canvas is a replaced element, so `inset: 0` alone wouldn't stretch it.
+- **A `<canvas>`:** draws on it and leaves its styles alone. `destroy()` clears it.
+- **Any other element:** adds a canvas inside it with `position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none`. If the element is `position: static`, it gets `position: relative`, and `destroy()` restores the original value.
 - **Accessibility.** Canvases the engine creates get `aria-hidden="true"`, the same as `<Snowfall>`.
 - **Start and stop.** The animation starts on creation. `stop()` and `start()` pause and resume it. After an explicit `stop()`, the automatic visibility pause never resumes the snow on its own. Reduced motion wins over `start()` (see `reducedMotion`).
 - **After `destroy()`**, every method is a no-op.
 
 ### Options
 
-`Range = number | [min, max]`. Each flake picks a random value inside the range. `update()` merges the options it gets into the current ones. A key set to `undefined` goes back to its default, so a wrapper can drop a removed prop.
+`Range = number | [min, max]`. Each flake picks a random value inside the range. `update()` merges the options it gets into the current ones. A key set to `undefined` goes back to its default, so a wrapper can drop a removed prop. Flakes get new sizes, speeds, opacities, colors, sway and spin only when one of those options (or `seed`, or the reduced-motion state) changes, so moving the wind slider doesn't reshuffle the snow.
 
 | Option | Type | Default | Meaning |
 |---|---|---|---|
@@ -219,7 +221,7 @@ type Snow = {
 | `color` | `string \| string[]` | `"#fff"` | One color, or a list from which each flake picks one at random. |
 | `shapes` | `Shape \| Array<Shape \| WeightedShape>` | `[dot]` | Shape variants, optionally weighted. |
 | `parallax` | `boolean` | `true` | Bigger flakes fall faster and are more opaque, which gives a sense of depth. |
-| `fps` | `number` | — | Frame-rate cap. Unset means the display refresh rate. |
+| `fps` | `number` | — | Frame-rate cap. Unset means the display refresh rate. The cap allows 10% slack, so 30 fps on a 60 Hz display draws every other frame. |
 | `maxDpr` | `number` | `2` | Upper limit on devicePixelRatio, to protect performance. |
 | `reducedMotion` | `"static" \| "reduce" \| "ignore"` | `"static"` | With `static`, the engine draws one frame and stops; it redraws that frame after a resize or `update()`, and `start()` doesn't animate it. With `reduce`, it keeps half the flakes at half the speed, with no rotation or gusts. Changes to the OS setting apply live. |
 | `pauseWhenHidden` | `boolean` | `true` | Pauses on tab hidden (`visibilitychange`) and when the canvas is off-screen (`IntersectionObserver`). |
@@ -244,7 +246,7 @@ type WeightedShape = { shape: Shape; weight: number };
 
 - **One `requestAnimationFrame` loop** with physics based on `dt`, so speed doesn't depend on frame rate. `dt` is clamped to 50 ms to avoid jumps after the tab was hidden.
 - **Pure physics.** `step(flakes, dt, env)` mutates plain state and has no DOM access, so it can be unit-tested without a canvas.
-- **Injectable clock (internal).** The engine factory in `engine.ts` takes its time source and scheduler (`now`, `requestFrame`, `cancelFrame`) as an extra parameter that `index.ts` doesn't expose. Tests import the factory directly and advance frames by hand, so they're deterministic and don't need fake rAF timers.
+- **Injectable clock (internal).** The engine factory in `engine.ts` takes its frame scheduler (`requestFrame`, `cancelFrame`; frame callbacks get the timestamp) as an extra parameter that `index.ts` doesn't expose. Tests import the factory directly and advance frames by hand, so they're deterministic and don't need fake rAF timers.
 - **Flake pool.** A fixed array of plain objects. Flakes that leave the screen are respawned at the top instead of allocating new ones, so there's no GC churn. Flakes wrap horizontally when wind pushes them sideways. The pool is resized only when `count` or `density` changes, or when the canvas resizes while `density` is set.
 - **First frame.** Flakes start spread over the whole canvas, so the snow looks like it has been falling for a while instead of starting at the top edge.
 - **Sprites.** Each `(shape × color)` pair is rendered once to a detached `<canvas>` element at the largest `size` × DPR. Sprites are rebuilt when `shapes`, `color` or the largest `size` changes, and when the DPR changes. Each frame then calls `drawImage` with `setTransform` (translate, rotate, scale), which is much cheaper than drawing paths for every flake.
@@ -274,8 +276,8 @@ return <canvas ref={canvasRef} />;
 - **`paused`.** `true` calls `stop()`, `false` calls `start()`. `useSnowfall` accepts `paused` in its options too. Reduced motion still wins (§5).
 - **`ref`** points to the `<canvas>`. `useSnowfall` returns nothing in v1: its options and `paused` cover control.
 - **Props** are all core options, plus `fullscreen?: boolean` and `paused?: boolean`, plus canvas attributes (`className`, `style`, `aria-hidden` defaults to `true`). A canvas attribute that shares a name with a core option is left out: React's non-standard `color` attribute would narrow `color` to a string. `width`, `height` and `children` aren't accepted, because the engine manages the canvas size.
-  - Default layout fills the parent: `position: absolute; inset: 0; pointer-events: none`. The parent needs a `position` other than `static`.
-  - `fullscreen` gives an overlay: `position: fixed; inset: 0; pointer-events: none; z-index: 9999`, the same as the core overlay. `style` overrides any of these.
+  - Default layout fills the parent: `position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none`. The parent needs a `position` other than `static`.
+  - `fullscreen` gives an overlay: `position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999`, the same as the core overlay. `style` overrides any of these.
 - **`@zimaleto/zima` is a regular dependency** (`workspace:^`), not bundled in, so it's never duplicated. Core's shapes and types are re-exported, so users need only one package.
 
 ---
@@ -455,7 +457,7 @@ A composite action, `.github/actions/setup`, installs pnpm, Node from `.nvmrc` a
   - Playwright Chromium in CI
   - the TS 7 typecheck check
 - **M1 · Core MVP.** Engine loop, the `dot` shape, all three targets (none for the page overlay, a canvas, a container), start on creation, count/density, size, speed, wind/gust, sway, rotation, opacity, color lists, parallax, `fps` cap, `seed`, resize and DPR handling, visibility pause, reduced motion, `update()`, `destroy()`. The playground gets live controls that drive `createSnow` directly. Tests: the core unit and browser suites from §8.
-- **M2 · Shapes.** `star`, `crystal`, `text()`, `image()` with async loading, custom `Shape`, weighted mix, sprite cache. Tests: shape selection, sprite rebuild on `update()`, image loading, and type tests for `Shape`.
+- **M2 · Shapes.** `star`, `crystal`, `text()`, `image()` with async loading, custom `Shape`, weighted mix, sprite cache. The M1 core already measures 1.99 KB of its 2 KB budget, so M2 has to win bytes back for the `shapes` option and the sprite cache, or ask the owner about the budget. Tests: shape selection, sprite rebuild on `update()`, image loading, and type tests for `Shape`.
 - **M3 · React.** `<Snowfall>` (with `fullscreen` and `paused`), `useSnowfall`, `"use client"`; the playground switches to `<Snowfall>`. Tests: the React, SSR, type and `dist` tests from §8.
 - **M4 · Polish.** IIFE build with its smoke test and 3 KB budget, the `deploy` job for the GitHub Pages demo, README for each package, and examples in `examples/`: Vite without a framework (`createSnow()`) and the Next.js App Router. The examples build in CI with the rest of the workspace. If `next build` still type-checks through the TypeScript JS API, the Next.js example takes TypeScript 6 from a named catalog.
 - **M5 · Release 0.1.0.** The `release` job, Trusted Publishing setup (with a manual first publish if npm needs it), the repo permission for the Version Packages PR, and the first changeset release. The npm org already exists.
