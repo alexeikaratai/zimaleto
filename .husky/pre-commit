@@ -1,2 +1,9 @@
-pnpm exec biome check --write --staged --no-errors-on-unmatched
+# Biome fixes the working-tree copy of each staged file and the fixed files are staged whole,
+# so a partly staged file would take its unstaged changes into the commit.
+if git status --porcelain | grep -q '^[MARC]M'; then
+    echo "pre-commit: stage or stash the rest of the partly staged files first" >&2
+    exit 1
+fi
+
+pnpm exec biome check --write --staged --error-on-warnings --no-errors-on-unmatched
 git update-index --again
