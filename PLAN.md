@@ -2,7 +2,7 @@
 
 > Tiny, zero-dependency canvas snowfall. Framework-agnostic TypeScript core + thin framework wrappers (React first; Vue and Angular later).
 
-Status: **planning** · Last updated: 2026-11-08 · Repo: [alexeikaratai/zimaleto](https://github.com/alexeikaratai/zimaleto) · npm: `@zimaleto/*`
+Status: **M0 · Scaffold** · Last updated: 2026-11-08 · Repo: [alexeikaratai/zimaleto](https://github.com/alexeikaratai/zimaleto) · npm: `@zimaleto/*`
 
 Working rules and code style: [CLAUDE.md](CLAUDE.md).
 
@@ -120,7 +120,7 @@ Later: `packages/zima-vue`, `packages/zima-angular`, `apps/docs`.
 - **Node version lives in the root only.** The root `package.json` sets `engines.node: ">=26"` for contributors. Published packages run in browsers, so they don't declare a Node engine.
 - **Develop against source, publish `dist`.** In the repo, each package's `exports` points to `./src/index.ts`, so the playground and tests use live source with HMR and nothing needs a watch build. `publishConfig.exports` (which pnpm swaps in at pack time) points to `dist/`. tsdown generates this pair with `exports: { devExports: true }`.
 - **Public registry only.** The repo's `.npmrc` pins `registry=https://registry.npmjs.org/`, whatever the machine's global npm config says.
-- **`pnpm-workspace.yaml` catalog** pins `react`, `react-dom`, `@types/react`, `@types/react-dom`, `typescript`, `vite`, `vitest`. Packages refer to them as `"catalog:"`. Internal dependencies use `"workspace:^"`. A named catalog can hold a second version for some packages, such as TypeScript 6 for Vue and Angular later (§9).
+- **`pnpm-workspace.yaml` catalog** pins every dependency that more than one package uses: React and its types, TypeScript, Vite, Vitest with its `@vitest/*` packages, Playwright, tsdown, publint, attw, size-limit and `@types/node`. Packages refer to them as `"catalog:"`. Internal dependencies use `"workspace:^"`. A named catalog can hold a second version for some packages, such as TypeScript 6 for Vue and Angular later (§9).
 - **`turbo.json` tasks:**
   - `build`: `dependsOn: ["^build"]`, `outputs: ["dist/**"]`
   - `typecheck`: cached, no outputs
@@ -129,8 +129,8 @@ Later: `packages/zima-vue`, `packages/zima-angular`, `apps/docs`.
   - `size`: `dependsOn: ["build"]`
   - `dev`: `cache: false`, `persistent: true`
 - **Lint isn't a Turborepo task.** `pnpm lint` runs Biome once over the whole repo, which is faster than splitting it per package and needs no cache.
-- **tsdown config:** `platform: "browser"`, `publint: true`, `attw: true` (its default `esm-only` profile fits ESM-only packages). Both checks only warn by default, so `failOnWarn: "ci-only"` turns any build warning into a CI failure while local builds just warn. tsdown packs the package with the detected package manager (`pnpm pack`), so the checks see `publishConfig.exports`.
-- **`biome.json`** (the rules are in CLAUDE.md): formatter with 4-space indent, line width 120, double quotes, semicolons, JSX `attributePosition: "multiline"`; import organizing on; the recommended linter rules plus the `react` domain; `style/noDefaultExport` on, with an override for config files that need a default export. It reads `.gitignore`.
+- **tsdown config:** `platform: "browser"`, `publint: true`, `attw: true` (its default `esm-only` profile fits ESM-only packages). Both checks only warn by default, so `failOnWarn: "ci-only"` turns any build warning into a CI failure while local builds just warn. tsdown packs the package with the detected package manager (`pnpm pack`), so the checks see `publishConfig.exports`. The React build suppresses Rolldown's warning that bundling may drop `"use client"`: a single entry chunk keeps it, and a `dist` test checks that.
+- **`biome.json`** (the rules are in CLAUDE.md): formatter with 4-space indent, line width 120, double quotes, semicolons, JSX `attributePosition: "multiline"`; import organizing on; `preset: "recommended"` plus the `react` domain; rules that enforce CLAUDE.md (`type` over `interface`, no `enum`, `import type`/`export type`, no `any`); `style/noDefaultExport` on, with an override for config files that need a default export. It reads `.gitignore` and skips `.claude/`. Markdown formatting is off, because it pads every table row to the widest cell.
 - **Pre-commit hook.** husky runs `biome check --write --staged --no-errors-on-unmatched` and re-stages the fixed files. CI runs the same check on every file.
 - **`tsconfig.base.json`:** `target: ES2022`, `module: ESNext`, `moduleResolution: bundler`, `strict`, `noUncheckedIndexedAccess`, `isolatedDeclarations`, `verbatimModuleSyntax`, `jsx: react-jsx`, `noEmit` (tsdown does the emitting), `lib: [ES2022, DOM, DOM.Iterable]`.
 - **Editor.** `.vscode/extensions.json` is committed and recommends the Biome extension. `.vscode/settings.json` holds personal settings, so it's gitignored; M0 adds Biome as the default formatter and `importModuleSpecifierEnding: "minimal"` to the local copy.
@@ -139,7 +139,7 @@ Later: `packages/zima-vue`, `packages/zima-angular`, `apps/docs`.
 
 ### Root scripts
 
-First setup: `nvm install` (reads `.nvmrc`); `npm install -g pnpm` if that Node has no pnpm yet (pnpm then switches itself to the `packageManager` version); `pnpm install`; `pnpm exec playwright install chromium`.
+First setup: `nvm install` (reads `.nvmrc`); `npm install -g pnpm` if that Node has no pnpm yet, because Node 26 no longer bundles Corepack (pnpm then switches itself to the `packageManager` version); `pnpm install`; `pnpm exec playwright install chromium`.
 
 | Command | Does |
 |---|---|
@@ -290,7 +290,7 @@ return <canvas ref={canvasRef} />;
   - `@zimaleto/zima`, `import { createSnow }` (includes the default `dot`): ≤ 2 KB brotli
   - `@zimaleto/zima`, IIFE build with every shape: ≤ 3 KB brotli
   - `@zimaleto/zima-react`, excluding core and React: ≤ 500 B brotli
-- **Versioning.** Changesets in **fixed** mode for `@zimaleto/*` while on 0.x. One version for all packages is simpler for users.
+- **Versioning.** Changesets in **fixed** mode for the `@zimaleto/zima*` packages while on 0.x (the private playground stays out). One version for all packages is simpler for users.
 - **Publishing.** `changesets/action` opens a "Version Packages" PR. Merging it runs `changeset publish`, which in a pnpm repo uses `pnpm pack` and `pnpm publish`: they swap in `publishConfig.exports` and rewrite `workspace:^` (plain `npm publish` would do neither). pnpm 12 publishes via **npm Trusted Publishing** (GitHub OIDC; the workflow needs `id-token: write`), which adds provenance and needs no long-lived `NPM_TOKEN`.
 - **Release setup (M5).**
   - Trusted Publishing is configured per package on npmjs.com. If npm still requires a package to exist before a trusted publisher can be added, the first publish of each package is done by hand with 2FA.
@@ -305,7 +305,7 @@ Vitest is the only test runner. Each package has its own `vitest.config.ts`. Tes
 
 - **CI:** `turbo run test` runs each package's full suite (every project, coverage and thresholds) with per-package caching.
 - **Locally:** `pnpm test:unit` is the fast loop without a browser. The root `vitest.config.ts` lists all packages under `test.projects`, which gives one watch session (and `--ui`) across the repo, plus a merged coverage report. The commands are in §4 (Root scripts).
-- **Project names** carry the package name (`zima:unit`, `zima:browser`, `zima:dist`, `zima-react:unit`, `zima-react:dist`), because the root config combines them and Vitest requires unique names.
+- **Project names** are short: `unit`, `browser`, `dist`. The root config namespaces them by package (`@zimaleto/zima (unit)`), which keeps them unique, so root filters look like `--project '!*(dist)'`.
 
 ### File conventions
 
@@ -424,10 +424,11 @@ Core is mocked with `vi.mock`, except in the SSR test, which renders with the re
 - Tests never depend on wall-clock time or `Math.random`. They use `seed` and the injectable clock (§5).
 - The playground is for manual tuning only. It doesn't replace tests.
 
-### Check during M0
+### Confirmed in M0
 
-- **Vitest typecheck with TypeScript 7.** TS 7 still ships a `tsc` binary; confirm that Vitest runs it and parses its output. `typecheck.checker` accepts a custom binary if the default lookup fails.
-- **publint and attw check the packed package.** They must see `publishConfig.exports` (what pnpm publishes), not the dev `exports` that point to `src`. Also confirm that a deliberate packaging error fails `pnpm build` with `CI=true`.
+- **Vitest typecheck with TypeScript 7.** Vitest runs TS 7's `tsc` binary and reads its output; type tests pass and fail as expected.
+- **publint and attw check the packed package.** They report on `publishConfig.exports` (what pnpm publishes), and with `CI=true` a deliberate packaging error fails `pnpm build`. Turborepo passes `CI` through to tasks.
+- **Coverage thresholds** fail the run when code is left uncovered, and `tsc` reports missing explicit types under `isolatedDeclarations`.
 
 ### Optional, after M2
 
