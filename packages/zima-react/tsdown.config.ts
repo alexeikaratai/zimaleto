@@ -8,7 +8,7 @@ export default defineConfig({
     exports: { devExports: true },
     publint: true,
     attw: true,
-    failOnWarn: "ci-only",
+    failOnWarn: true,
     // Rolldown warns that bundling may drop the directive, but a single entry chunk keeps it;
     // directive.dist.test.ts guards that.
     suppressWarnings: 'module level directive "use client"',

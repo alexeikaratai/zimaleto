@@ -21,7 +21,7 @@ Vue and Angular wrappers come later as their own packages: `@zimaleto/zima-vue` 
 - One branch and one pull request per milestone (`m0-scaffold`, `m1-core`, …), opened against `main`. Stop after each milestone: the owner reviews and merges.
 - `main` is protected: changes land only through pull requests with green CI. Never push to `main` or rewrite its history.
 - A milestone is done when its features are covered by tests and CI is green.
-- Before finishing any change, run `pnpm lint:fix && pnpm verify`. `verify` runs the same checks as CI: lint, typecheck, tests, build and size. The browser tests need Chromium, installed once with `pnpm exec playwright install chromium`.
+- Before finishing any change, run `pnpm lint:fix && pnpm verify`. `verify` runs the same checks as CI: lint, typecheck, tests, build and size, and like CI it fails on lint and build warnings. The browser tests need Chromium, installed once with `pnpm exec playwright install chromium`.
 - Dependencies: add the latest version from the public npm registry (`npm view <package> version`). Don't copy versions from other projects. The repo's `.npmrc` pins the registry.
 - Keep the size budgets (`pnpm size`). Never raise a budget without asking.
 
@@ -35,7 +35,13 @@ Vue and Angular wrappers come later as their own packages: `@zimaleto/zima-vue` 
 
 ## Code style
 
-Biome is the only formatter and linter: no Prettier, no ESLint. The settings live in `biome.json`: 4-space indent, 120 columns, double quotes, semicolons, multiline JSX attributes, imports organized by Biome. A husky pre-commit hook runs Biome on staged files.
+Biome is the only formatter and linter: no Prettier, no ESLint. The settings live in `biome.json`: 4-space indent, 120 columns, double quotes, semicolons, multiline JSX attributes, imports organized by Biome. A husky pre-commit hook runs Biome on staged files and refuses files that are only partly staged.
+
+### Structure
+
+- Group code into folders by module, each with one job: the core has `engine/`, `options/`, `physics/` and `shapes/`, and the playground has `controls/`, `fields/`, `stage/` and `options/`.
+- Keep files under about 300 lines, tests included. Split a file by responsibility before it grows past that.
+- Constants live next to the code that uses them, not in a shared constants file.
 
 ### TypeScript
 
@@ -70,12 +76,13 @@ Biome is the only formatter and linter: no Prettier, no ESLint. The settings liv
 
 ### Tests
 
-- Vitest only. Tests live in a `__tests__/` folder next to the code: `physics.test.ts`, `engine.browser.test.ts`, `Snowfall.ssr.test.tsx`, `api.test-d.ts`, and `iife.dist.test.ts` for checks of the built files.
+- Vitest only. Tests live in a `__tests__/` folder in the module they test, one file per topic: `physics/__tests__/motion.test.ts`, `engine/__tests__/resize.browser.test.ts`, `Snowfall.ssr.test.tsx`, `api.test-d.ts`, and `iife.dist.test.ts` for checks of the built files. Shared helpers live in `src/__tests__/support/`.
 - `describe` + `test`, Arrange → Act → Assert, one behavior per test.
 - Test branching, math, edge cases and invalid input. Skip tests that only restate the implementation.
 - No wall-clock time or `Math.random` in tests: use `seed` and the injectable clock.
 - `vi.mock` goes at file scope, and mocks are restored after each test.
 - A bug fix starts with a failing test.
+- Coverage stays at 100% for statements, branches, functions and lines; the thresholds fail the run below that.
 
 ## Constraints
 

@@ -46,7 +46,13 @@
         "@zimaleto/zima": "workspace:^"
     },
     "peerDependencies": {
+        "@types/react": "^19",
         "react": "^19"
+    },
+    "peerDependenciesMeta": {
+        "@types/react": {
+            "optional": true
+        }
     },
     "devDependencies": {
         "@arethetypeswrong/core": "catalog:",

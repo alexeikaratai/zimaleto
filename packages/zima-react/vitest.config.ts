@@ -9,7 +9,10 @@ export default defineConfig({
             exclude: ["src/**/__tests__/**"],
             reporter: ["text", "lcov"],
             thresholds: {
-                lines: 90,
+                lines: 100,
+                functions: 100,
+                branches: 100,
+                statements: 100,
             },
         },
         projects: [

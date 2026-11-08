@@ -1,0 +1,98 @@
+.field {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 14px;
+}
+
+.field-label {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 0;
+}
+
+/* A legend sizes to its content unless told otherwise, which would keep the value from aligning right. */
+.field-legend {
+    width: 100%;
+    padding: 0;
+}
+
+.field-value {
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+}
+
+.field-hint {
+    margin: 0;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.field-toggle {
+    grid-template-columns: auto 1fr;
+    align-items: center;
+}
+
+.field-toggle .field-hint {
+    grid-column: 2;
+}
+
+input[type="range"],
+input[type="checkbox"] {
+    accent-color: var(--accent);
+}
+
+input[type="range"] {
+    width: 100%;
+}
+
+select,
+input[type="number"],
+button {
+    font: inherit;
+    color: var(--text);
+    background: rgb(255 255 255 / 6%);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 6px 10px;
+}
+
+button {
+    cursor: pointer;
+}
+
+button:hover {
+    background: rgb(255 255 255 / 12%);
+}
+
+.swatches {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.swatch {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-align: left;
+}
+
+.swatch[aria-pressed="true"] {
+    border-color: var(--accent);
+}
+
+.swatch-colors {
+    display: flex;
+}
+
+.swatch-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: -4px;
+    border: 1px solid var(--night);
+}

@@ -8,7 +8,8 @@ on:
 permissions:
     contents: read
 
-# Pull requests drop outdated runs. Runs on main always finish, because their last jobs deploy and release.
+# A new push to a pull request cancels its older run. A run on main that has started always finishes, because its
+# last jobs will deploy and release; a newer push only replaces one that is still queued.
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
     cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -17,8 +18,11 @@ jobs:
     lint:
         name: Lint
         runs-on: ubuntu-latest
+        timeout-minutes: 10
         steps:
             - uses: actions/checkout@v7
+              with:
+                  persist-credentials: false
             - uses: ./.github/actions/setup
             - run: pnpm lint
 
@@ -26,8 +30,11 @@ jobs:
         name: Typecheck
         needs: lint
         runs-on: ubuntu-latest
+        timeout-minutes: 10
         steps:
             - uses: actions/checkout@v7
+              with:
+                  persist-credentials: false
             - uses: ./.github/actions/setup
             - run: pnpm typecheck
 
@@ -35,8 +42,11 @@ jobs:
         name: Build and size
         needs: typecheck
         runs-on: ubuntu-latest
+        timeout-minutes: 10
         steps:
             - uses: actions/checkout@v7
+              with:
+                  persist-credentials: false
             - uses: ./.github/actions/setup
             - run: pnpm build
             - run: pnpm size
@@ -45,8 +55,11 @@ jobs:
         name: Test
         needs: build
         runs-on: ubuntu-latest
+        timeout-minutes: 10
         steps:
             - uses: actions/checkout@v7
+              with:
+                  persist-credentials: false
             - uses: ./.github/actions/setup
 
             - name: Read the Playwright version
@@ -58,7 +71,7 @@ jobs:
               uses: actions/cache@v6
               with:
                   path: ~/.cache/ms-playwright
-                  key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+                  key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ steps.playwright.outputs.version }}
 
             - name: Install Chromium
               if: steps.playwright-cache.outputs.cache-hit != 'true'
@@ -76,4 +89,13 @@ jobs:
               with:
                   name: coverage
                   path: packages/*/coverage/
+                  if-no-files-found: ignore
+
+            - name: Upload screenshots of failed browser tests
+              if: ${{ failure() }}
+              uses: actions/upload-artifact@v7
+              with:
+                  name: failure-screenshots
+                  path: packages/*/.vitest/
+                  include-hidden-files: true
                   if-no-files-found: ignore

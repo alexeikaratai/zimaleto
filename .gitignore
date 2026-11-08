@@ -7,9 +7,13 @@ tsconfig.vitest-temp.json
 # Screenshots that Vitest browser mode saves for failed tests
 .vitest/
 *.log
+*.tgz
+.env
+.env.*
 .DS_Store
 
 # Personal editor and tool settings
+.idea/
 .vscode/*
 !.vscode/extensions.json
 .claude/settings.local.json

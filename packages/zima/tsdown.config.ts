@@ -8,5 +8,5 @@ export default defineConfig({
     exports: { devExports: true },
     publint: true,
     attw: true,
-    failOnWarn: "ci-only",
+    failOnWarn: true,
 });
