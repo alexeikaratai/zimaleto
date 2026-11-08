@@ -294,6 +294,7 @@ return <canvas ref={canvasRef} />;
 - **Release setup (M5).**
   - Trusted Publishing is configured per package on npmjs.com for the `ci.yml` workflow, because the release job lives there. If npm still requires a package to exist before a trusted publisher can be added, the first publish of each package is done by hand with 2FA.
   - The repo must allow GitHub Actions to create pull requests (Settings → Actions → General), so `changesets/action` can open the Version Packages PR.
+  - A PR opened with the default `GITHUB_TOKEN` doesn't trigger workflows, so the required checks would never run on the Version Packages PR and `main`'s ruleset would block it. The release job therefore opens it with a GitHub App token.
 - **Demo.** The `deploy` job builds the playground on every push to `main`, after the tests pass, and deploys it to GitHub Pages at `https://alexeikaratai.github.io/zimaleto/` (Vite `base: "/zimaleto/"`, Pages source: GitHub Actions). The READMEs link to it.
 
 ---
@@ -444,7 +445,7 @@ A composite action, `.github/actions/setup`, installs pnpm, Node from `.nvmrc` a
 
 ## 9. Milestones
 
-**Workflow.** Each milestone is one branch (`m0-scaffold`, `m1-core`, `m2-shapes`, `m3-react`, `m4-polish`, `m5-release`) and one pull request into `main`. A milestone is done when its features are implemented, covered by Vitest tests (§8), CI is green, and the owner has reviewed and merged the PR. Work stops after each milestone until then.
+**Workflow.** Each milestone is one branch (`m0-scaffold`, `m1-core`, `m2-shapes`, `m3-react`, `m4-polish`, `m5-release`) and one pull request into `main`, squash-merged so it lands as one commit titled with the PR title. A milestone is done when its features are implemented, covered by Vitest tests (§8), CI is green, and the owner has reviewed and merged the PR. Work stops after each milestone until then.
 
 - **M0 · Scaffold.** Workspace, Turborepo, root scripts (§4), Biome (configured per CLAUDE.md), husky pre-commit, tsconfig, `.gitignore`, `.vscode/extensions.json`, `LICENSE` (MIT, `alexeikaratai`) in the root and in each package, README stubs, and empty `zima`, `zima-react` and `playground` that build and pass publint/attw. Test setup is included:
   - Vitest configs (the per-package projects from §8, plus the root `projects` config)
@@ -493,3 +494,4 @@ Decided on 2026-11-07 unless a row gives another date.
 | Node | 26 LTS via nvm (`.nvmrc`) |
 | Tests | Vitest only (§8), in `__tests__/` folders |
 | CI pipeline (2026-11-08) | One workflow with jobs in a strict order: lint → typecheck → build and size → test, then on `main` deploy (M4) → release (M5). |
+| Repo protection (2026-11-08) | A ruleset on `main`: changes only through PRs, merged only when Lint, Typecheck, Build and size and Test pass on an up-to-date branch; no force push, deletion or bypass, admins included. Squash merge only, with linear history; branches are deleted after merge. Dependabot alerts and security updates, secret scanning with push protection, and private vulnerability reporting are on. |

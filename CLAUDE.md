@@ -19,6 +19,7 @@ Vue and Angular wrappers come later as their own packages: `@zimaleto/zima-vue` 
 ## Workflow
 
 - One branch and one pull request per milestone (`m0-scaffold`, `m1-core`, …), opened against `main`. Stop after each milestone: the owner reviews and merges.
+- `main` is protected: changes land only through pull requests with green CI. Never push to `main` or rewrite its history.
 - A milestone is done when its features are covered by tests and CI is green.
 - Before finishing any change, run `pnpm lint:fix && pnpm verify`. `verify` runs the same checks as CI: lint, typecheck, tests, build and size. The browser tests need Chromium, installed once with `pnpm exec playwright install chromium`.
 - Dependencies: add the latest version from the public npm registry (`npm view <package> version`). Don't copy versions from other projects. The repo's `.npmrc` pins the registry.
@@ -28,7 +29,7 @@ Vue and Angular wrappers come later as their own packages: `@zimaleto/zima-vue` 
 
 - Format: `type(scope): subject`. Types: `feat`, `fix`, `refactor`, `perf`, `test`, `docs`, `build`, `ci`, `chore`, `style`. The scope is the package or app (`zima`, `zima-react`, `playground`); leave it out for repo-wide changes.
 - Subject: imperative mood, lowercase, no trailing period, no emoji. Example: `feat(zima): add wind gusts`.
-- PR titles use the same format. The description says briefly what changed and why.
+- PR titles use the same format, because pull requests are squash-merged and the title becomes the commit subject on `main`. The description says briefly what changed and why.
 - **No AI attribution anywhere:** no `Co-Authored-By` trailers, no "Generated with …" lines in PRs, no AI annotations in code.
 - After the first release, every user-facing change gets a changeset (`pnpm changeset`).
 
