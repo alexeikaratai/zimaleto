@@ -8,24 +8,46 @@ on:
 permissions:
     contents: read
 
+# Pull requests drop outdated runs. Runs on main always finish, because their last jobs deploy and release.
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: true
+    cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-    verify:
+    lint:
+        name: Lint
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v7
+            - uses: ./.github/actions/setup
+            - run: pnpm lint
 
-            - uses: pnpm/action-setup@v6
+    typecheck:
+        name: Typecheck
+        needs: lint
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7
+            - uses: ./.github/actions/setup
+            - run: pnpm typecheck
 
-            - uses: actions/setup-node@v7
-              with:
-                  node-version-file: .nvmrc
-                  cache: pnpm
+    build:
+        name: Build and size
+        needs: typecheck
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7
+            - uses: ./.github/actions/setup
+            - run: pnpm build
+            - run: pnpm size
 
-            - run: pnpm install --frozen-lockfile
+    test:
+        name: Test
+        needs: build
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7
+            - uses: ./.github/actions/setup
 
             - name: Read the Playwright version
               id: playwright
@@ -46,7 +68,7 @@ jobs:
               if: steps.playwright-cache.outputs.cache-hit == 'true'
               run: pnpm exec playwright install-deps chromium
 
-            - run: pnpm verify
+            - run: pnpm test
 
             - name: Upload coverage
               if: ${{ !cancelled() }}
