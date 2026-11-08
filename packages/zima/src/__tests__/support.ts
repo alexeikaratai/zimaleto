@@ -106,6 +106,21 @@ export function stubMediaQueries({ isReducedMotion = false }: MediaQueryStubOpti
     };
 }
 
+/** A promise and the function that resolves it. */
+export type Deferred = {
+    promise: Promise<void>;
+    resolve(): void;
+};
+
+export function createDeferred(): Deferred {
+    let settle: () => void = () => undefined;
+    const promise = new Promise<void>((resolve) => {
+        settle = resolve;
+    });
+
+    return { promise, resolve: () => settle() };
+}
+
 /** Adds an empty block of the given CSS size to the page. */
 export function createContainer(width = 200, height = 100): HTMLDivElement {
     const container = document.createElement("div");

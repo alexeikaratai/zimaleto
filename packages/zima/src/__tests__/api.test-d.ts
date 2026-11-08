@@ -1,5 +1,14 @@
 import { describe, expectTypeOf, test } from "vitest";
-import { createSnow, type Range, type Shape, type Snow, type SnowOptions } from "../index";
+import {
+    createSnow,
+    crystal,
+    type Range,
+    type Shape,
+    type Snow,
+    type SnowOptions,
+    star,
+    type WeightedShape,
+} from "../index";
 
 describe("Range", () => {
     test("accepts a number", () => {
@@ -49,7 +58,27 @@ describe("createSnow", () => {
 });
 
 describe("Shape", () => {
-    test("is a drawing function that takes the context and a radius", () => {
-        expectTypeOf<(context: CanvasRenderingContext2D, radius: number) => void>().toEqualTypeOf<Shape>();
+    test("accepts any function that draws with the context and a radius", () => {
+        expectTypeOf<(context: CanvasRenderingContext2D, radius: number) => void>().toExtend<Shape>();
+    });
+
+    test("rejects a function that needs more arguments", () => {
+        expectTypeOf<
+            (context: CanvasRenderingContext2D, radius: number, angle: number) => void
+        >().not.toExtend<Shape>();
+    });
+});
+
+describe("shapes option", () => {
+    test("accepts a single shape", () => {
+        expectTypeOf({ shapes: star }).toExtend<SnowOptions>();
+    });
+
+    test("accepts a list that mixes plain and weighted shapes", () => {
+        expectTypeOf({ shapes: [star, { shape: crystal, weight: 2 }] }).toExtend<SnowOptions>();
+    });
+
+    test("rejects a weight that isn't a number", () => {
+        expectTypeOf<{ shape: Shape; weight: "2" }>().not.toExtend<WeightedShape>();
     });
 });
