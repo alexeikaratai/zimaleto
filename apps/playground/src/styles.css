@@ -186,7 +186,9 @@ button:hover {
     color: var(--muted);
 }
 
+/* Relative, so the <Snowfall> inside can fill it. */
 .snow-surface {
+    position: relative;
     display: grid;
     place-items: center;
     width: 100%;
