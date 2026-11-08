@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest";
 import { countFlakes, normalizeOptions, reduceMotion } from "../options";
+import { crystal } from "../shapes/crystal";
+import { dot } from "../shapes/dot";
+import { star } from "../shapes/star";
 
 describe("normalizeOptions", () => {
     test("applies the defaults", () => {
@@ -16,6 +19,7 @@ describe("normalizeOptions", () => {
             rotation: [-90, 90],
             opacity: [0.6, 1],
             colors: ["#fff"],
+            shapes: [{ shape: dot, weight: 1 }],
             parallax: true,
             fps: undefined,
             maxDpr: 2,
@@ -117,6 +121,40 @@ describe("normalizeOptions", () => {
         const settings = normalizeOptions({ color: [] });
 
         expect(settings.colors).toEqual(["#fff"]);
+    });
+
+    test("gives a single shape a weight of 1", () => {
+        const settings = normalizeOptions({ shapes: star });
+
+        expect(settings.shapes).toEqual([{ shape: star, weight: 1 }]);
+    });
+
+    test("mixes plain and weighted shapes in a list", () => {
+        const settings = normalizeOptions({ shapes: [star, { shape: crystal, weight: 3 }] });
+
+        expect(settings.shapes).toEqual([
+            { shape: star, weight: 1 },
+            { shape: crystal, weight: 3 },
+        ]);
+    });
+
+    test("drops shapes whose weight isn't positive", () => {
+        const settings = normalizeOptions({
+            shapes: [
+                { shape: star, weight: 0 },
+                { shape: crystal, weight: -1 },
+                { shape: dot, weight: Number.NaN },
+                { shape: star, weight: 2 },
+            ],
+        });
+
+        expect(settings.shapes).toEqual([{ shape: star, weight: 2 }]);
+    });
+
+    test("falls back to the dot when no shape is left", () => {
+        const settings = normalizeOptions({ shapes: [] });
+
+        expect(settings.shapes).toEqual([{ shape: dot, weight: 1 }]);
     });
 
     test("restores the default for a key set to undefined, as update() merges it", () => {

@@ -1,7 +1,10 @@
 import { describe, expect, test } from "vitest";
 import { normalizeOptions } from "../options";
-import { type Environment, type Flake, gustAt, rollFlake, spawnFlake, step, swayOffset } from "../physics";
+import { type Environment, type Flake, gustAt, pickShape, rollFlake, spawnFlake, step, swayOffset } from "../physics";
 import { createRandom } from "../random";
+import { crystal } from "../shapes/crystal";
+import { dot } from "../shapes/dot";
+import { star } from "../shapes/star";
 
 function createFlake(overrides: Partial<Flake> = {}): Flake {
     return {
@@ -11,6 +14,7 @@ function createFlake(overrides: Partial<Flake> = {}): Flake {
         speed: 40,
         opacity: 1,
         color: "#fff",
+        shape: dot,
         swayAmplitude: 0,
         swayFrequency: 1,
         swayPhase: 0,
@@ -147,6 +151,32 @@ describe("gustAt", () => {
 
     test("is zero without gusts", () => {
         expect(gustAt(12.3, 0)).toBe(0);
+    });
+});
+
+describe("pickShape", () => {
+    test("picks shapes in proportion to their weights", () => {
+        const shapes = [
+            { shape: star, weight: 3 },
+            { shape: crystal, weight: 1 },
+        ];
+        const random = createRandom(11);
+
+        const picks = Array.from({ length: 4000 }, () => pickShape(shapes, random));
+        const starShare = picks.filter((shape) => shape === star).length / picks.length;
+
+        expect(starShare).toBeCloseTo(0.75, 1);
+    });
+
+    test("picks the last shape when rounding leaves a sliver past the total", () => {
+        const shapes = [
+            { shape: star, weight: 0.1 },
+            { shape: crystal, weight: 0.2 },
+        ];
+
+        const picked = pickShape(shapes, () => 0.9999999999999999);
+
+        expect(picked).toBe(crystal);
     });
 });
 

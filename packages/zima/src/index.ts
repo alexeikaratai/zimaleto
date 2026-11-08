@@ -3,8 +3,12 @@ import type { SnowOptions } from "./options";
 
 export type { Snow } from "./engine";
 export type { Range, ReducedMotion, SnowOptions } from "./options";
+export { crystal } from "./shapes/crystal";
 export { dot } from "./shapes/dot";
-export type { Shape } from "./shapes/shape";
+export { image } from "./shapes/image";
+export type { Shape, WeightedShape } from "./shapes/shape";
+export { star } from "./shapes/star";
+export { text } from "./shapes/text";
 
 const BROWSER_CLOCK: Clock = {
     requestFrame: (callback) => requestAnimationFrame(callback),

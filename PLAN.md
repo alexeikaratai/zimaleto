@@ -2,7 +2,7 @@
 
 > Tiny, zero-dependency canvas snowfall. Framework-agnostic TypeScript core + thin framework wrappers (React first; Vue and Angular later).
 
-Status: **M1 · Core MVP** · Last updated: 2026-11-08 · Repo: [alexeikaratai/zimaleto](https://github.com/alexeikaratai/zimaleto) · npm: `@zimaleto/*`
+Status: **M2 · Shapes** · Last updated: 2026-11-08 · Repo: [alexeikaratai/zimaleto](https://github.com/alexeikaratai/zimaleto) · npm: `@zimaleto/*`
 
 Working rules and code style: [CLAUDE.md](CLAUDE.md).
 
@@ -10,7 +10,7 @@ Working rules and code style: [CLAUDE.md](CLAUDE.md).
 
 ## 1. Goals
 
-- **Tiny core.** `@zimaleto/zima`: zero dependencies, SSR-safe, tree-shakeable, **≤ 2 KB min+brotli**.
+- **Tiny core.** `@zimaleto/zima`: zero dependencies, SSR-safe, tree-shakeable, **≤ 2.5 KB min+brotli**.
 - **Thin wrappers.** Each framework gets its own small package on top of the core. `@zimaleto/zima-react` adds **≤ 500 B**; `@zimaleto/zima-vue` and `@zimaleto/zima-angular` follow the same pattern later.
 - **Works without a framework.** `createSnow()` with no element puts snow over the whole page, and the same call works from a `<script>` tag through the CDN build.
 - **Configurable flakes.** Count/density, size, fall speed, wind and gusts, sway, rotation, opacity, one color or a list, shape variants (built-in and custom), parallax.
@@ -87,6 +87,7 @@ zimaleto/
 │  │  │     ├─ index.test.ts           # the entry imports in Node without touching the DOM
 │  │  │     ├─ engine.browser.test.ts  # the engine with a manual clock
 │  │  │     ├─ index.browser.test.ts   # createSnow() with real frames
+│  │  │     ├─ shapes.browser.test.ts  # built-in shapes and image loading
 │  │  │     ├─ iife.dist.test.ts       # runs the built IIFE (M4)
 │  │  │     ├─ api.test-d.ts           # type tests for the public API
 │  │  │     └─ support.ts              # manual clock, media query stubs, containers
@@ -232,15 +233,17 @@ Public option names follow web-platform style (`parallax`, not `hasParallax`). T
 ### Shapes
 
 ```ts
-type Shape = (context: CanvasRenderingContext2D, radius: number) => void; // draw centered at (0, 0)
+// Draws centered at (0, 0). `ready`, if present, holds back the shape's flakes until it resolves.
+type Shape = ((context: CanvasRenderingContext2D, radius: number) => void) & { readonly ready?: Promise<unknown> };
 type WeightedShape = { shape: Shape; weight: number };
 ```
 
-- Built-ins are named exports, so unused ones are tree-shaken: `dot`, `star`, `crystal` (six arms).
-- Helpers: `text("❄")` for emoji or glyph flakes, and `image(src)` for a bitmap flake.
+- Built-ins are named exports, so unused ones are tree-shaken: `dot`, `star` (five points), `crystal` (six arms with branches).
+- Helpers: `text("❄")` for emoji or glyph flakes, and `image(src)` for a bitmap flake. The same arguments always return the same shape, so calling them inline doesn't rebuild sprites.
 - A custom shape is any function with the `Shape` signature.
+- **Weights.** A plain shape weighs 1. Entries whose weight isn't positive are dropped; with none left, the dot is used.
 - **Color.** The engine sets `fillStyle` and `strokeStyle` to the flake's color before calling a shape, and shapes draw with them. `image()` ignores color, and color emoji keep their own colors.
-- **Images load asynchronously.** An `image()` sprite is built once the image has loaded. Until then, flakes with that shape are skipped.
+- **Images load asynchronously.** `image()` starts loading when a snowfall first needs the picture, so calling it during server rendering is safe. Its `ready` promise holds back that shape's flakes until the picture has loaded; the engine learns about it one microtask later and redraws. A picture that fails to load never resolves, so its flakes never show and `drawImage()` never sees a broken image.
 
 ### Engine internals
 
@@ -249,7 +252,7 @@ type WeightedShape = { shape: Shape; weight: number };
 - **Injectable clock (internal).** The engine factory in `engine.ts` takes its frame scheduler (`requestFrame`, `cancelFrame`; frame callbacks get the timestamp) as an extra parameter that `index.ts` doesn't expose. Tests import the factory directly and advance frames by hand, so they're deterministic and don't need fake rAF timers.
 - **Flake pool.** A fixed array of plain objects. Flakes that leave the screen are respawned at the top instead of allocating new ones, so there's no GC churn. Flakes wrap horizontally when wind pushes them sideways. The pool is resized only when `count` or `density` changes, or when the canvas resizes while `density` is set.
 - **First frame.** Flakes start spread over the whole canvas, so the snow looks like it has been falling for a while instead of starting at the top edge.
-- **Sprites.** Each `(shape × color)` pair is rendered once to a detached `<canvas>` element at the largest `size` × DPR. Sprites are rebuilt when `shapes`, `color` or the largest `size` changes, and when the DPR changes. Each frame then calls `drawImage` with `setTransform` (translate, rotate, scale), which is much cheaper than drawing paths for every flake.
+- **Sprites.** Each `(shape × color)` pair is rendered once to a detached `<canvas>` element at the largest `size` × DPR, with a quarter of the radius as margin so strokes and glyphs that overshoot aren't clipped. Sprites are rebuilt when `shapes`, `color` or the largest `size` changes, and when the DPR changes. Each frame then calls `drawImage` with `setTransform` (translate, rotate, scale), which is much cheaper than drawing paths for every flake.
 - **Wind gusts** are a cheap smooth noise: a sum of two sines with incommensurate frequencies.
 - **Resize.** A `ResizeObserver` sets the canvas backing store to CSS size × `min(devicePixelRatio, maxDpr)`. DPR changes (another screen, browser zoom) trigger the same update.
 - **SSR safety.** Nothing touches `window` or `document` when the module is imported; all DOM access happens inside `createSnow()`.
@@ -288,7 +291,7 @@ return <canvas ref={canvasRef} />;
 - **Package metadata.** Each package has its own `README.md` and a copy of `LICENSE`, because npm packs only what's inside the package folder. `repository` (with `directory`), `homepage` and `bugs` point to the GitHub repo; npm rejects provenance when `repository.url` doesn't match the repo that publishes.
 - **Core also ships `dist/zimaleto.iife.js`** for `<script>` and CDN use (unpkg, jsDelivr), exposing `window.Zimaleto`. The `unpkg` and `jsdelivr` fields in `package.json` point to it.
 - **Size budgets** (size-limit, enforced in CI). A budget is never raised without the owner's approval.
-  - `@zimaleto/zima`, `import { createSnow }` (includes the default `dot`): ≤ 2 KB brotli
+  - `@zimaleto/zima`, `import { createSnow }` (includes the default `dot`): ≤ 2.5 KB brotli (raised from 2 KB in M2, see §10)
   - `@zimaleto/zima`, IIFE build with every shape: ≤ 3 KB brotli
   - `@zimaleto/zima-react`, excluding core and React: ≤ 500 B brotli
 - **Versioning.** Changesets in **fixed** mode for the `@zimaleto/zima*` packages while on 0.x (the private playground stays out). One version for all packages is simpler for users.
@@ -457,7 +460,7 @@ A composite action, `.github/actions/setup`, installs pnpm, Node from `.nvmrc` a
   - Playwright Chromium in CI
   - the TS 7 typecheck check
 - **M1 · Core MVP.** Engine loop, the `dot` shape, all three targets (none for the page overlay, a canvas, a container), start on creation, count/density, size, speed, wind/gust, sway, rotation, opacity, color lists, parallax, `fps` cap, `seed`, resize and DPR handling, visibility pause, reduced motion, `update()`, `destroy()`. The playground gets live controls that drive `createSnow` directly. Tests: the core unit and browser suites from §8.
-- **M2 · Shapes.** `star`, `crystal`, `text()`, `image()` with async loading, custom `Shape`, weighted mix, sprite cache. The M1 core already measures 1.99 KB of its 2 KB budget, so M2 has to win bytes back for the `shapes` option and the sprite cache, or ask the owner about the budget. Tests: shape selection, sprite rebuild on `update()`, image loading, and type tests for `Shape`.
+- **M2 · Shapes.** `star`, `crystal`, `text()`, `image()` with async loading, custom `Shape`, weighted mix, sprite cache. The `shapes` option and the sprite cache took `createSnow` from 1.99 KB to 2.31 KB, so the owner raised its budget to 2.5 KB. Tests: shape selection, sprite rebuild on `update()`, image loading, and type tests for `Shape`.
 - **M3 · React.** `<Snowfall>` (with `fullscreen` and `paused`), `useSnowfall`, `"use client"`; the playground switches to `<Snowfall>`. Tests: the React, SSR, type and `dist` tests from §8.
 - **M4 · Polish.** IIFE build with its smoke test and 3 KB budget, the `deploy` job for the GitHub Pages demo, README for each package, and examples in `examples/`: Vite without a framework (`createSnow()`) and the Next.js App Router. The examples build in CI with the rest of the workspace. If `next build` still type-checks through the TypeScript JS API, the Next.js example takes TypeScript 6 from a named catalog.
 - **M5 · Release 0.1.0.** The `release` job, Trusted Publishing setup (with a manual first publish if npm needs it), the repo permission for the Version Packages PR, and the first changeset release. The npm org already exists.
@@ -496,4 +499,5 @@ Decided on 2026-11-07 unless a row gives another date.
 | Node | 26 LTS via nvm (`.nvmrc`) |
 | Tests | Vitest only (§8), in `__tests__/` folders |
 | CI pipeline (2026-11-08) | One workflow with jobs in a strict order: lint → typecheck → build and size → test, then on `main` deploy (M4) → release (M5). |
+| Core size budget (2026-11-08) | `import { createSnow }` may take up to 2.5 KB brotli instead of 2 KB. The weighted `shapes` option, the sprite cache and image loading add about 300 B, and the M1 engine alone already filled 2 KB. |
 | Repo protection (2026-11-08) | A ruleset on `main`: changes only through PRs, merged only when Lint, Typecheck, Build and size and Test pass on an up-to-date branch; no force push, deletion or bypass, admins included. Squash merge only, with linear history; branches are deleted after merge. Dependabot alerts and security updates, secret scanning with push protection, and private vulnerability reporting are on. |

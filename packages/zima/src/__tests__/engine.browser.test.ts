@@ -1,8 +1,10 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { createEngine, type Snow } from "../engine";
 import type { SnowOptions } from "../options";
+import type { Shape } from "../shapes/shape";
 import {
     createContainer,
+    createDeferred,
     createManualClock,
     hasVisiblePixels,
     type ManualClock,
@@ -155,13 +157,13 @@ describe("drawing", () => {
         expect(hasVisiblePixels(snow.canvas)).toBe(false);
     });
 
-    test("draws one dot per flake in each frame", () => {
-        const arc = vi.spyOn(CanvasRenderingContext2D.prototype, "arc");
+    test("draws one sprite per flake in each frame", () => {
+        const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, "drawImage");
         const { clock } = setup({ count: 7 }, addContainer());
 
         clock.tick();
 
-        expect(arc).toHaveBeenCalledTimes(7);
+        expect(drawImage).toHaveBeenCalledTimes(7);
     });
 });
 
@@ -184,17 +186,17 @@ describe("resize", () => {
     });
 
     test("with density, keeps the flake count in step with the area", async () => {
-        const arc = vi.spyOn(CanvasRenderingContext2D.prototype, "arc");
+        const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, "drawImage");
         const container = addContainer(200, 100);
         const { snow, clock } = setup({ density: 1 }, container);
 
         container.style.width = "400px";
         container.style.height = "200px";
         await vi.waitFor(() => expect(snow.canvas.width).toBe(400));
-        arc.mockClear();
+        drawImage.mockClear();
         clock.tick();
 
-        expect(arc).toHaveBeenCalledTimes(8);
+        expect(drawImage).toHaveBeenCalledTimes(8);
     });
 
     test("follows a devicePixelRatio change", () => {
@@ -410,12 +412,12 @@ describe("reducedMotion", () => {
 
     test('"reduce" animates half the flakes', () => {
         stubMediaQueries({ isReducedMotion: true });
-        const arc = vi.spyOn(CanvasRenderingContext2D.prototype, "arc");
+        const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, "drawImage");
         const { clock } = setup({ count: 10, reducedMotion: "reduce" }, addContainer());
 
         clock.tick();
 
-        expect(arc).toHaveBeenCalledTimes(5);
+        expect(drawImage).toHaveBeenCalledTimes(5);
     });
 
     test('"ignore" animates as usual', () => {
@@ -447,48 +449,191 @@ describe("reducedMotion", () => {
 
 describe("update", () => {
     test("changes the flake count live", () => {
-        const arc = vi.spyOn(CanvasRenderingContext2D.prototype, "arc");
+        const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, "drawImage");
         const { snow, clock } = setup({ count: 10 }, addContainer());
 
         snow.update({ count: 3 });
-        arc.mockClear();
+        drawImage.mockClear();
         clock.tick();
 
-        expect(arc).toHaveBeenCalledTimes(3);
+        expect(drawImage).toHaveBeenCalledTimes(3);
     });
 
     test("restores the default for an option set to undefined", () => {
-        const arc = vi.spyOn(CanvasRenderingContext2D.prototype, "arc");
+        const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, "drawImage");
         const { snow, clock } = setup({ count: 3 }, addContainer());
 
         snow.update({ count: undefined });
-        arc.mockClear();
+        drawImage.mockClear();
         clock.tick();
 
-        expect(arc).toHaveBeenCalledTimes(150);
+        expect(drawImage).toHaveBeenCalledTimes(150);
     });
 
     test("gives every flake the new size when the size changes", () => {
-        const arc = vi.spyOn(CanvasRenderingContext2D.prototype, "arc");
+        const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, "drawImage");
         const { snow, clock } = setup({ count: 5 }, addContainer());
 
-        snow.update({ size: 7 });
-        arc.mockClear();
+        snow.update({ size: 4 });
+        drawImage.mockClear();
         clock.tick();
 
-        expect(arc.mock.calls.map((call) => call[2])).toEqual([7, 7, 7, 7, 7]);
+        expect(drawImage.mock.calls.map((call) => call[3])).toEqual([10, 10, 10, 10, 10]);
     });
 
     test("keeps every flake's size when only the wind changes", () => {
-        const arc = vi.spyOn(CanvasRenderingContext2D.prototype, "arc");
+        const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, "drawImage");
         const { snow, clock } = setup({ count: 5, seed: 4 }, addContainer());
         clock.tick();
-        const sizesBefore = arc.mock.calls.map((call) => call[2]);
+        const sizesBefore = drawImage.mock.calls.map((call) => call[3]);
 
         snow.update({ wind: 40 });
-        arc.mockClear();
+        drawImage.mockClear();
         clock.tick();
 
-        expect(arc.mock.calls.map((call) => call[2])).toEqual(sizesBefore);
+        expect(drawImage.mock.calls.map((call) => call[3])).toEqual(sizesBefore);
+    });
+});
+
+describe("shapes and sprites", () => {
+    function createShapeSpy(): Shape {
+        return vi.fn((context: CanvasRenderingContext2D, radius: number) => {
+            context.fillRect(-radius, -radius, radius * 2, radius * 2);
+        });
+    }
+
+    test("renders each shape and color once, however many flakes use it", () => {
+        const shape = createShapeSpy();
+        const { clock } = setup({ count: 40, shapes: shape, color: ["red", "blue"], seed: 2 }, addContainer());
+
+        clock.tick();
+        clock.tick();
+
+        expect(shape).toHaveBeenCalledTimes(2);
+    });
+
+    test("renders sprites at the largest flake size times the pixel ratio", () => {
+        vi.spyOn(window, "devicePixelRatio", "get").mockReturnValue(2);
+        const shape = createShapeSpy();
+        const { clock } = setup({ count: 3, shapes: shape, size: [1, 6] }, addContainer());
+
+        clock.tick();
+
+        expect(vi.mocked(shape).mock.calls[0]?.[1]).toBe(12);
+    });
+
+    test("rebuilds sprites when the colors change", () => {
+        const shape = createShapeSpy();
+        const { snow, clock } = setup({ count: 10, shapes: shape }, addContainer());
+        clock.tick();
+
+        snow.update({ color: "green" });
+        clock.tick();
+
+        expect(shape).toHaveBeenCalledTimes(2);
+    });
+
+    test("rebuilds sprites when the largest size changes", () => {
+        const shape = createShapeSpy();
+        const { snow, clock } = setup({ count: 10, shapes: shape }, addContainer());
+        clock.tick();
+
+        snow.update({ size: [2, 9] });
+        clock.tick();
+
+        expect(shape).toHaveBeenCalledTimes(2);
+    });
+
+    test("rebuilds sprites when the shapes change", () => {
+        const first = createShapeSpy();
+        const second = createShapeSpy();
+        const { snow, clock } = setup({ count: 10, shapes: first }, addContainer());
+        clock.tick();
+
+        snow.update({ shapes: second });
+        clock.tick();
+
+        expect(second).toHaveBeenCalledOnce();
+    });
+
+    test("keeps its sprites when only the wind changes", () => {
+        const shape = createShapeSpy();
+        const { snow, clock } = setup({ count: 10, shapes: shape }, addContainer());
+        clock.tick();
+
+        snow.update({ wind: 30 });
+        clock.tick();
+
+        expect(shape).toHaveBeenCalledOnce();
+    });
+
+    test("rebuilds sprites when the devicePixelRatio changes", () => {
+        const media = stubMediaQueries();
+        const pixelRatio = vi.spyOn(window, "devicePixelRatio", "get").mockReturnValue(1);
+        const shape = createShapeSpy();
+        const { clock } = setup({ count: 10, shapes: shape }, addContainer());
+        clock.tick();
+
+        pixelRatio.mockReturnValue(2);
+        media.changeResolution();
+        clock.tick();
+
+        expect(shape).toHaveBeenCalledTimes(2);
+    });
+
+    test("mixes weighted shapes", () => {
+        const common = createShapeSpy();
+        const rare = createShapeSpy();
+        const { clock } = setup(
+            { count: 200, seed: 5, shapes: [common, { shape: rare, weight: 0.5 }] },
+            addContainer(),
+        );
+
+        clock.tick();
+
+        expect([common, rare].map((shape) => vi.mocked(shape).mock.calls.length)).toEqual([1, 1]);
+    });
+
+    test("skips flakes until their shape is ready, then draws them", async () => {
+        const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, "drawImage");
+        const loading = createDeferred();
+        const shape: Shape = Object.assign(createShapeSpy(), { ready: loading.promise });
+        const { clock } = setup({ count: 4, shapes: shape }, addContainer());
+        clock.tick();
+        const callsWhileLoading = drawImage.mock.calls.length;
+
+        loading.resolve();
+        await loading.promise;
+        clock.tick();
+
+        expect([callsWhileLoading, drawImage.mock.calls.length]).toEqual([0, 4]);
+    });
+
+    test("draws a shape that gets ready while the snow is stopped", async () => {
+        const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, "drawImage");
+        const loading = createDeferred();
+        const shape: Shape = Object.assign(createShapeSpy(), { ready: loading.promise });
+        const { snow, clock } = setup({ count: 4, shapes: shape }, addContainer());
+        clock.tick();
+        snow.stop();
+
+        loading.resolve();
+        await loading.promise;
+
+        expect(drawImage).toHaveBeenCalledTimes(4);
+    });
+
+    test("doesn't draw on a destroyed canvas when a shape gets ready", async () => {
+        const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, "drawImage");
+        const loading = createDeferred();
+        const shape: Shape = Object.assign(createShapeSpy(), { ready: loading.promise });
+        const { snow, clock } = setup({ count: 4, shapes: shape }, addContainer());
+        clock.tick();
+        snow.destroy();
+
+        loading.resolve();
+        await loading.promise;
+
+        expect(drawImage).not.toHaveBeenCalled();
     });
 });

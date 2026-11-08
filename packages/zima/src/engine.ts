@@ -1,7 +1,7 @@
 import { countFlakes, normalizeOptions, reduceMotion, type Settings, type SnowOptions } from "./options";
 import { type Flake, gustAt, MAX_STEP_MS, rollFlake, spawnFlake, step, swayOffset } from "./physics";
 import { createRandom, type Random } from "./random";
-import { dot } from "./shapes/dot";
+import type { Shape } from "./shapes/shape";
 
 /** A running snowfall. */
 export type Snow = {
@@ -26,6 +26,8 @@ export type Clock = {
 const CANVAS_STYLE = "inset:0;width:100%;height:100%;pointer-events:none;position:";
 // One second minus 10% slack, so a 30 fps cap on a 60 Hz display draws every other frame instead of every third.
 const SLACKED_SECOND_MS = 900;
+// A sprite spans 1.25 radii each way, so strokes and glyphs that overshoot the radius aren't cut off.
+const SPRITE_EXTENT = 1.25;
 
 export function createEngine(target: HTMLElement | undefined, initialOptions: SnowOptions, clock: Clock): Snow {
     const ownsCanvas = target?.tagName !== "CANVAS";
@@ -36,7 +38,12 @@ export function createEngine(target: HTMLElement | undefined, initialOptions: Sn
     let settings: Settings;
     let random: Random;
     let flakeLook = "";
+    let shapesOption: SnowOptions["shapes"];
     const flakes: Flake[] = [];
+    // One pre-rendered canvas per shape and color, at the largest flake size.
+    let sprites = new Map<Shape, Map<string, HTMLCanvasElement>>();
+    // Shapes with a `ready` promise: false while it's pending, true once it resolved.
+    const loadedShapes = new WeakMap<Shape, boolean>();
     let width = 0;
     let height = 0;
     let ratio = 0;
@@ -55,18 +62,63 @@ export function createEngine(target: HTMLElement | undefined, initialOptions: Sn
         context.clearRect(0, 0, canvas.width, canvas.height);
     }
 
+    function isLoaded(shape: Shape): boolean {
+        const { ready } = shape;
+
+        if (ready && !loadedShapes.has(shape)) {
+            loadedShapes.set(shape, false);
+            ready.then(() => {
+                loadedShapes.set(shape, true);
+                if (!isDestroyed) {
+                    render();
+                }
+            });
+        }
+
+        return !ready || loadedShapes.get(shape) === true;
+    }
+
+    function spriteFor(shape: Shape, color: string): HTMLCanvasElement | undefined {
+        let byColor = sprites.get(shape);
+        if (!byColor) {
+            byColor = new Map();
+            sprites.set(shape, byColor);
+        }
+
+        let sprite = byColor.get(color);
+        if (!sprite && isLoaded(shape)) {
+            const radius = settings.size[1] * ratio;
+            // At least one pixel: drawImage() throws on an empty canvas.
+            const half = Math.max(1, Math.ceil(radius * SPRITE_EXTENT));
+            sprite = document.createElement("canvas");
+            sprite.width = half * 2;
+            sprite.height = half * 2;
+            const spriteContext = sprite.getContext("2d") as CanvasRenderingContext2D;
+            spriteContext.translate(half, half);
+            spriteContext.fillStyle = color;
+            spriteContext.strokeStyle = color;
+            shape(spriteContext, radius);
+            byColor.set(color, sprite);
+        }
+
+        return sprite;
+    }
+
     function draw(): void {
         clear();
 
         for (const flake of flakes) {
-            const cos = Math.cos(flake.angle) * ratio;
-            const sin = Math.sin(flake.angle) * ratio;
+            const sprite = spriteFor(flake.shape, flake.color);
 
-            context.setTransform(cos, sin, -sin, cos, (flake.x + swayOffset(flake)) * ratio, flake.y * ratio);
-            context.globalAlpha = flake.opacity;
-            context.fillStyle = flake.color;
-            context.strokeStyle = flake.color;
-            dot(context, flake.radius);
+            if (sprite) {
+                const cos = Math.cos(flake.angle) * ratio;
+                const sin = Math.sin(flake.angle) * ratio;
+                const extent = flake.radius * SPRITE_EXTENT;
+
+                context.setTransform(cos, sin, -sin, cos, (flake.x + swayOffset(flake)) * ratio, flake.y * ratio);
+                context.globalAlpha = flake.opacity;
+                context.drawImage(sprite, -extent, -extent, extent * 2, extent * 2);
+            }
         }
     }
 
@@ -106,10 +158,15 @@ export function createEngine(target: HTMLElement | undefined, initialOptions: Sn
     function render(): void {
         const nextRatio = Math.min(devicePixelRatio, settings.maxDpr);
 
-        if (canvas.clientWidth !== width || canvas.clientHeight !== height || nextRatio !== ratio) {
+        if (nextRatio !== ratio) {
+            ratio = nextRatio;
+            sprites = new Map();
+            width = -1;
+        }
+
+        if (canvas.clientWidth !== width || canvas.clientHeight !== height) {
             width = canvas.clientWidth;
             height = canvas.clientHeight;
-            ratio = nextRatio;
             canvas.width = Math.round(width * ratio);
             canvas.height = Math.round(height * ratio);
         }
@@ -135,9 +192,12 @@ export function createEngine(target: HTMLElement | undefined, initialOptions: Sn
         random = settings.seed === undefined ? Math.random : createRandom(settings.seed);
 
         const { size, speed, opacity, colors, sway, rotation, parallax, seed } = settings;
+        // Shapes are functions, which JSON can't compare, so the option itself is compared by reference.
         const look = JSON.stringify([size, speed, opacity, colors, sway, rotation, parallax, seed]);
-        if (look !== flakeLook) {
+        if (look !== flakeLook || options.shapes !== shapesOption) {
             flakeLook = look;
+            shapesOption = options.shapes;
+            sprites = new Map();
             for (const flake of flakes) {
                 rollFlake(flake, settings, random);
             }

@@ -1,4 +1,6 @@
 import type { Bounds } from "./random";
+import { dot } from "./shapes/dot";
+import type { Shape, WeightedShape } from "./shapes/shape";
 
 /** A fixed value, or a `[min, max]` range from which each flake picks its own random value. */
 export type Range = number | [min: number, max: number];
@@ -60,6 +62,11 @@ export type SnowOptions = {
      */
     color?: string | string[];
     /**
+     * Shape variants. Each flake picks one, in proportion to its weight (1 when not given).
+     * @defaultValue [dot]
+     */
+    shapes?: Shape | Array<Shape | WeightedShape>;
+    /**
      * Bigger flakes fall faster and are more opaque, which gives a sense of depth.
      * @defaultValue true
      */
@@ -97,6 +104,7 @@ export type Settings = {
     rotation: Bounds;
     opacity: Bounds;
     colors: string[];
+    shapes: WeightedShape[];
     parallax: boolean;
     fps: number | undefined;
     maxDpr: number;
@@ -127,6 +135,10 @@ function toBounds(range: Range | undefined, fallback: Bounds, floor = -Infinity,
 export function normalizeOptions(options: SnowOptions): Settings {
     const { density } = options;
     const colors = [options.color].flat().filter(Boolean) as string[];
+    const shapes = [options.shapes ?? dot]
+        .flat()
+        .map((entry) => (typeof entry === "function" ? { shape: entry, weight: 1 } : entry))
+        .filter(({ weight }) => weight > 0);
 
     return {
         count: Math.max(0, Math.round(finite(options.count, 150))),
@@ -139,6 +151,7 @@ export function normalizeOptions(options: SnowOptions): Settings {
         rotation: toBounds(options.rotation, [-90, 90]),
         opacity: toBounds(options.opacity, [0.6, 1], 0, 1),
         colors: colors.length > 0 ? colors : ["#fff"],
+        shapes: shapes.length > 0 ? shapes : [{ shape: dot, weight: 1 }],
         parallax: options.parallax ?? true,
         fps: positive(options.fps, undefined),
         maxDpr: positive(options.maxDpr, 2),

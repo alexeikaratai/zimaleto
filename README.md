@@ -4,7 +4,7 @@ Tiny, zero-dependency canvas snowfall for the web. Work in progress: nothing is 
 
 | Package | What |
 |---|---|
-| [`@zimaleto/zima`](packages/zima) | Framework-agnostic core: zero dependencies, ≤ 2 KB brotli |
+| [`@zimaleto/zima`](packages/zima) | Framework-agnostic core: zero dependencies, ≤ 2.5 KB brotli |
 | [`@zimaleto/zima-react`](packages/zima-react) | React 19 wrapper, ≤ 500 B on top of the core |
 
 ## Development

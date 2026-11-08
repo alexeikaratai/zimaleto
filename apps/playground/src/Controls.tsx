@@ -6,6 +6,7 @@ import { type SelectChoice, SelectField } from "./components/SelectField";
 import { SliderField } from "./components/SliderField";
 import { ToggleField } from "./components/ToggleField";
 import type { PlaygroundOptions, TargetMode } from "./options";
+import { SHAPE_LABELS, SHAPE_NAMES } from "./shapes";
 
 type AmountMode = "count" | "density";
 
@@ -194,7 +195,25 @@ export function Controls({
                     unit="°/s"
                     onChange={(rotation) => onOptionsChange({ rotation })}
                 />
-                <p className="field-hint">Dots look the same at any angle; spin shows with the shapes in M2.</p>
+                <p className="field-hint">Dots look the same at any angle; spin shows on the other shapes.</p>
+            </section>
+
+            <section className="panel-section">
+                <h2>Shapes</h2>
+                <p className="field-hint">Each flake picks a shape in proportion to its weight. 0 leaves it out.</p>
+                {SHAPE_NAMES.map((name) => (
+                    <SliderField
+                        key={name}
+                        label={SHAPE_LABELS[name]}
+                        value={options.shapeWeights[name]}
+                        min={0}
+                        max={5}
+                        step={0.5}
+                        onChange={(weight) =>
+                            onOptionsChange({ shapeWeights: { ...options.shapeWeights, [name]: weight } })
+                        }
+                    />
+                ))}
             </section>
 
             <section className="panel-section">

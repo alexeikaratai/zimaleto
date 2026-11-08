@@ -1,6 +1,6 @@
 # @zimaleto/zima
 
-Tiny, zero-dependency canvas snowfall. Framework-agnostic, SSR-safe, ≤ 2 KB brotli.
+Tiny, zero-dependency canvas snowfall. Framework-agnostic, SSR-safe, ≤ 2.5 KB brotli.
 
 Work in progress: nothing is published yet. See the [repository](https://github.com/alexeikaratai/zimaleto) for the plan.
 
