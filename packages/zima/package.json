@@ -56,8 +56,9 @@
     },
     "size-limit": [
         {
-            "name": "@zimaleto/zima",
+            "name": "import { createSnow }",
             "path": "dist/index.js",
+            "import": "{ createSnow }",
             "limit": "2 KB"
         }
     ]
