@@ -66,10 +66,9 @@ zimaleto/
 ├─ tsconfig.base.json
 ├─ vitest.config.ts            # root: test.projects → one watch UI + merged coverage locally
 ├─ .changeset/
-├─ .github/workflows/
-│  ├─ ci.yml                   # lint · typecheck · test · build · size
-│  ├─ pages.yml                # playground → GitHub Pages on push to main
-│  └─ release.yml              # changesets/action → pnpm publish (OIDC)
+├─ .github/
+│  ├─ actions/setup/           # pnpm, Node from .nvmrc, pnpm install
+│  └─ workflows/ci.yml         # lint → typecheck → build → test; on main: deploy (M4) → release (M5)
 ├─ packages/
 │  ├─ zima/                    # @zimaleto/zima (core)
 │  │  ├─ src/
@@ -154,7 +153,7 @@ First setup: `nvm install` (reads `.nvmrc`); `npm install -g pnpm` if that Node 
 | `pnpm test:ui` | the same with `--ui` |
 | `pnpm coverage` | root `vitest run --coverage` without the `dist` projects: one merged report, no thresholds |
 | `pnpm size` | `turbo run size` |
-| `pnpm verify` | `pnpm lint && turbo run typecheck test build size`: exactly what CI runs |
+| `pnpm verify` | `pnpm lint && turbo run typecheck test build size`: the checks CI runs, in one command |
 | `pnpm changeset` | records a changeset |
 
 ---
@@ -291,11 +290,11 @@ return <canvas ref={canvasRef} />;
   - `@zimaleto/zima`, IIFE build with every shape: ≤ 3 KB brotli
   - `@zimaleto/zima-react`, excluding core and React: ≤ 500 B brotli
 - **Versioning.** Changesets in **fixed** mode for the `@zimaleto/zima*` packages while on 0.x (the private playground stays out). One version for all packages is simpler for users.
-- **Publishing.** `changesets/action` opens a "Version Packages" PR. Merging it runs `changeset publish`, which in a pnpm repo uses `pnpm pack` and `pnpm publish`: they swap in `publishConfig.exports` and rewrite `workspace:^` (plain `npm publish` would do neither). pnpm 12 publishes via **npm Trusted Publishing** (GitHub OIDC; the workflow needs `id-token: write`), which adds provenance and needs no long-lived `NPM_TOKEN`.
+- **Publishing.** The `release` job, the last job of the CI workflow on `main`, runs `changesets/action`. It opens a "Version Packages" PR, and merging that PR runs `changeset publish`, which in a pnpm repo uses `pnpm pack` and `pnpm publish`: they swap in `publishConfig.exports` and rewrite `workspace:^` (plain `npm publish` would do neither). pnpm 12 publishes via **npm Trusted Publishing** (GitHub OIDC; the workflow needs `id-token: write`), which adds provenance and needs no long-lived `NPM_TOKEN`.
 - **Release setup (M5).**
-  - Trusted Publishing is configured per package on npmjs.com. If npm still requires a package to exist before a trusted publisher can be added, the first publish of each package is done by hand with 2FA.
+  - Trusted Publishing is configured per package on npmjs.com for the `ci.yml` workflow, because the release job lives there. If npm still requires a package to exist before a trusted publisher can be added, the first publish of each package is done by hand with 2FA.
   - The repo must allow GitHub Actions to create pull requests (Settings → Actions → General), so `changesets/action` can open the Version Packages PR.
-- **Demo.** `pages.yml` builds the playground on every push to `main` and deploys it to GitHub Pages at `https://alexeikaratai.github.io/zimaleto/` (Vite `base: "/zimaleto/"`, Pages source: GitHub Actions). The READMEs link to it.
+- **Demo.** The `deploy` job builds the playground on every push to `main`, after the tests pass, and deploys it to GitHub Pages at `https://alexeikaratai.github.io/zimaleto/` (Vite `base: "/zimaleto/"`, Pages source: GitHub Actions). The READMEs link to it.
 
 ---
 
@@ -413,9 +412,16 @@ Core is mocked with `vi.mock`, except in the SSR test, which renders with the re
 
 ### CI
 
-1. Install Chromium once with `pnpm exec playwright install --with-deps chromium`, cached by Playwright version.
-2. Run `pnpm verify`: `pnpm lint`, then `turbo run typecheck test build size`.
-3. Upload the coverage report as a build artifact.
+One workflow, `ci.yml`, runs its jobs in a strict order. Each job is a separate check on the PR and starts only after the previous one passes:
+
+1. **Lint:** `pnpm lint`
+2. **Typecheck:** `pnpm typecheck`
+3. **Build and size:** `pnpm build`, then `pnpm size`
+4. **Test:** installs Chromium (cached by Playwright version), runs `pnpm test` and uploads the coverage reports
+5. **Deploy** (M4, `main` only): the playground to GitHub Pages
+6. **Release** (M5, `main` only): Changesets and npm
+
+A composite action, `.github/actions/setup`, installs pnpm, Node from `.nvmrc` and the dependencies for every job. Pull requests cancel outdated runs; runs on `main` always finish, because their last jobs deploy and release.
 
 ### Rules
 
@@ -450,8 +456,8 @@ Core is mocked with `vi.mock`, except in the SSR test, which renders with the re
 - **M1 · Core MVP.** Engine loop, the `dot` shape, all three targets (none for the page overlay, a canvas, a container), start on creation, count/density, size, speed, wind/gust, sway, rotation, opacity, color lists, parallax, `fps` cap, `seed`, resize and DPR handling, visibility pause, reduced motion, `update()`, `destroy()`. The playground gets live controls that drive `createSnow` directly. Tests: the core unit and browser suites from §8.
 - **M2 · Shapes.** `star`, `crystal`, `text()`, `image()` with async loading, custom `Shape`, weighted mix, sprite cache. Tests: shape selection, sprite rebuild on `update()`, image loading, and type tests for `Shape`.
 - **M3 · React.** `<Snowfall>` (with `fullscreen` and `paused`), `useSnowfall`, `"use client"`; the playground switches to `<Snowfall>`. Tests: the React, SSR, type and `dist` tests from §8.
-- **M4 · Polish.** IIFE build with its smoke test and 3 KB budget, GitHub Pages demo, README for each package, and examples in `examples/`: Vite without a framework (`createSnow()`) and the Next.js App Router. The examples build in CI with the rest of the workspace. If `next build` still type-checks through the TypeScript JS API, the Next.js example takes TypeScript 6 from a named catalog.
-- **M5 · Release 0.1.0.** Trusted Publishing setup (with a manual first publish if npm needs it), the repo permission for the Version Packages PR, and the first changeset release. The npm org already exists.
+- **M4 · Polish.** IIFE build with its smoke test and 3 KB budget, the `deploy` job for the GitHub Pages demo, README for each package, and examples in `examples/`: Vite without a framework (`createSnow()`) and the Next.js App Router. The examples build in CI with the rest of the workspace. If `next build` still type-checks through the TypeScript JS API, the Next.js example takes TypeScript 6 from a named catalog.
+- **M5 · Release 0.1.0.** The `release` job, Trusted Publishing setup (with a manual first publish if npm needs it), the repo permission for the Version Packages PR, and the first changeset release. The npm org already exists.
 - **Later.**
   - `@zimaleto/zima-vue`: Vue 3 component plus a `useSnowfall` composable.
   - `@zimaleto/zima-angular`: standalone component with signals. It needs ng-packagr and the Angular Package Format, so it's built outside tsdown and wired into Turborepo as its own `build`.
@@ -462,7 +468,7 @@ Core is mocked with `vi.mock`, except in the SSR test, which renders with the re
 
 ## 10. Decisions
 
-All decided on 2026-11-07.
+Decided on 2026-11-07 unless a row gives another date.
 
 | Topic | Decision |
 |---|---|
@@ -486,3 +492,4 @@ All decided on 2026-11-07.
 | `<Snowfall>` layout | Fills its parent by default; the `fullscreen` prop turns it into a fixed overlay. |
 | Node | 26 LTS via nvm (`.nvmrc`) |
 | Tests | Vitest only (§8), in `__tests__/` folders |
+| CI pipeline (2026-11-08) | One workflow with jobs in a strict order: lint → typecheck → build and size → test, then on `main` deploy (M4) → release (M5). |
