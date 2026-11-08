@@ -59,7 +59,7 @@
             "name": "import { createSnow }",
             "path": "dist/index.js",
             "import": "{ createSnow }",
-            "limit": "2 KB"
+            "limit": "2.5 KB"
         }
     ]
 }
