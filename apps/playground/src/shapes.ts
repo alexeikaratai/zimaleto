@@ -1,4 +1,4 @@
-import { crystal, dot, image, type Shape, star, text, type WeightedShape } from "@zimaleto/zima";
+import { crystal, dot, image, type Shape, star, text, type WeightedShape } from "@zimaleto/zima-react";
 
 export type ShapeName = "dot" | "star" | "crystal" | "glyph" | "picture";
 

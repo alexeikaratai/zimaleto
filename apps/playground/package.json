@@ -8,7 +8,6 @@
         "typecheck": "tsc"
     },
     "dependencies": {
-        "@zimaleto/zima": "workspace:^",
         "@zimaleto/zima-react": "workspace:^",
         "react": "catalog:",
         "react-dom": "catalog:"

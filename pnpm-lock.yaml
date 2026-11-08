@@ -250,9 +250,6 @@ importers:
 
   apps/playground:
     dependencies:
-      '@zimaleto/zima':
-        specifier: workspace:^
-        version: link:../../packages/zima
       '@zimaleto/zima-react':
         specifier: workspace:^
         version: link:../../packages/zima-react

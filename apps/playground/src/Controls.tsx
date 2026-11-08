@@ -1,4 +1,4 @@
-import type { ReducedMotion } from "@zimaleto/zima";
+import type { ReducedMotion } from "@zimaleto/zima-react";
 import type { ChangeEvent, ReactElement } from "react";
 import { ColorPresets } from "./components/ColorPresets";
 import { RangeField } from "./components/RangeField";
@@ -91,7 +91,8 @@ export function Controls({
             <header className="panel-header">
                 <h1>zima</h1>
                 <p>
-                    Every control calls <code>snow.update()</code> on a live snowfall.
+                    Every control changes a prop of a live <code>&lt;Snowfall&gt;</code>, which passes it to{" "}
+                    <code>snow.update()</code>.
                 </p>
             </header>
 

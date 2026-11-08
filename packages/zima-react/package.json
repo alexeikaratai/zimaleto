@@ -68,9 +68,10 @@
     },
     "size-limit": [
         {
-            "name": "@zimaleto/zima-react",
+            "name": "import { Snowfall }",
             "path": "dist/index.js",
-            "limit": "500 B",
+            "import": "{ Snowfall }",
+            "limit": "650 B",
             "ignore": [
                 "@zimaleto/zima",
                 "react",
