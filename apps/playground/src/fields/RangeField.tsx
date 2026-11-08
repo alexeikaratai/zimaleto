@@ -13,6 +13,7 @@ export type RangeFieldProps = {
 /** Two sliders for a `[min, max]` range. Each one stops at the other, so the range never flips. */
 export function RangeField({ label, value, min, max, step, unit = "", onChange }: RangeFieldProps): ReactElement {
     const [low, high] = value;
+    const rangeText = low === high ? `${low}${unit}` : `${low} – ${high}${unit}`;
 
     function handleLowChange(event: ChangeEvent<HTMLInputElement>): void {
         onChange([Math.min(event.currentTarget.valueAsNumber, high), high]);
@@ -27,15 +28,18 @@ export function RangeField({ label, value, min, max, step, unit = "", onChange }
             <legend className="field-legend">
                 <span className="field-label">
                     {label}
-                    <output className="field-value">
-                        {low === high ? low : `${low} – ${high}`}
-                        {unit}
-                    </output>
+                    <span
+                        className="field-value"
+                        aria-hidden
+                    >
+                        {rangeText}
+                    </span>
                 </span>
             </legend>
             <input
                 type="range"
                 aria-label={`${label}, minimum`}
+                aria-valuetext={`${low}${unit}`}
                 min={min}
                 max={max}
                 step={step}
@@ -45,6 +49,7 @@ export function RangeField({ label, value, min, max, step, unit = "", onChange }
             <input
                 type="range"
                 aria-label={`${label}, maximum`}
+                aria-valuetext={`${high}${unit}`}
                 min={min}
                 max={max}
                 step={step}

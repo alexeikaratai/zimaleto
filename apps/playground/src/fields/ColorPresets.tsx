@@ -1,7 +1,5 @@
 import type { ReactElement } from "react";
-import { COLOR_PRESETS, type ColorPreset } from "../options";
-
-const PRESET_NAMES = Object.keys(COLOR_PRESETS) as ColorPreset[];
+import { COLOR_PRESETS, type ColorPreset, PRESET_NAMES } from "../options/colorPresets";
 
 export type ColorPresetsProps = {
     value: string[];
@@ -40,6 +38,7 @@ function PresetButton({ name, isSelected, onSelect }: PresetButtonProps): ReactE
     );
 }
 
+/** Buttons for the color presets; the one matching the current colors is pressed. */
 export function ColorPresets({ value, onChange }: ColorPresetsProps): ReactElement {
     const selectedName = PRESET_NAMES.find((name) => COLOR_PRESETS[name].join() === value.join());
 

@@ -1,7 +1,7 @@
 import { type ReactElement, useState } from "react";
-import { Controls } from "./Controls";
-import { INITIAL_OPTIONS, type PlaygroundOptions, type TargetMode } from "./options";
-import { SnowStage } from "./SnowStage";
+import { Controls } from "./controls/Controls";
+import { INITIAL_OPTIONS, type PlaygroundOptions, type TargetMode } from "./options/playgroundOptions";
+import { SnowStage } from "./stage/SnowStage";
 
 export function App(): ReactElement {
     const [options, setOptions] = useState<PlaygroundOptions>(INITIAL_OPTIONS);
@@ -22,7 +22,7 @@ export function App(): ReactElement {
             <Controls
                 options={options}
                 mode={mode}
-                paused={isPaused}
+                isPaused={isPaused}
                 onOptionsChange={handleOptionsChange}
                 onModeChange={setMode}
                 onPausedChange={setIsPaused}
@@ -32,7 +32,7 @@ export function App(): ReactElement {
                 key={restartCount}
                 mode={mode}
                 options={options}
-                paused={isPaused}
+                isPaused={isPaused}
             />
         </div>
     );

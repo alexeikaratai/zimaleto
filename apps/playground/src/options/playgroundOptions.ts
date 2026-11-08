@@ -52,12 +52,3 @@ export function toSnowOptions(options: PlaygroundOptions, shapes: SnowOptions["s
 
     return { ...coreOptions, shapes };
 }
-
-export type ColorPreset = "Snow" | "Ice" | "Aurora" | "Ember";
-
-export const COLOR_PRESETS: Record<ColorPreset, readonly string[]> = {
-    Snow: ["#ffffff"],
-    Ice: ["#ffffff", "#cfe8ff", "#9ccfff"],
-    Aurora: ["#e0fff4", "#9effd8", "#b7a6ff"],
-    Ember: ["#fff4e0", "#ffd38a", "#ff9f7a"],
-};
