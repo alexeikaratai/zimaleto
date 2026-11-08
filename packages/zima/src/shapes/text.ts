@@ -5,6 +5,8 @@ const shapesByGlyph = new Map<string, Shape>();
 /**
  * A flake drawn from text, such as `text("❄")` or an emoji. Color emoji keep their own colors.
  * The same glyph and font always give the same shape, so calling it inline doesn't rebuild sprites.
+ * Load a web font before the snow starts, for example with `document.fonts.load()`: flakes drawn
+ * while it's still loading keep the fallback glyph.
  *
  * @param glyph - The character or emoji to draw.
  * @param font - A CSS font family.

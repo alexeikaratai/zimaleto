@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { image } from "../shapes/image";
-import { text } from "../shapes/text";
+import { image } from "../image";
+import { text } from "../text";
 
 describe("text", () => {
     test("returns the same shape for the same glyph and font", () => {

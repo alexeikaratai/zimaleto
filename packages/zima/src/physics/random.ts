@@ -1,8 +1,7 @@
+import type { Bounds } from "../options/settings";
+
 /** Returns a number in [0, 1). */
 export type Random = () => number;
-
-/** Inclusive `[min, max]` bounds with `min <= max`. */
-export type Bounds = [min: number, max: number];
 
 /** mulberry32: a tiny seedable generator with a full 2^32 period. */
 export function createRandom(seed: number): Random {
@@ -13,7 +12,7 @@ export function createRandom(seed: number): Random {
         let value = Math.imul(state ^ (state >>> 15), state | 1);
         value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
 
-        return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+        return ((value ^ (value >>> 14)) >>> 0) / 2 ** 32;
     };
 }
 

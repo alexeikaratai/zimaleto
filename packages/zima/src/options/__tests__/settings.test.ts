@@ -1,8 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { countFlakes, normalizeOptions, reduceMotion } from "../options";
-import { crystal } from "../shapes/crystal";
-import { dot } from "../shapes/dot";
-import { star } from "../shapes/star";
+import { crystal } from "../../shapes/crystal";
+import { dot } from "../../shapes/dot";
+import { star } from "../../shapes/star";
+import { countFlakes, normalizeOptions, reduceMotion } from "../settings";
+import type { SnowOptions } from "../snowOptions";
 
 describe("normalizeOptions", () => {
     test("applies the defaults", () => {
@@ -21,7 +22,7 @@ describe("normalizeOptions", () => {
             colors: ["#fff"],
             shapes: [{ shape: dot, weight: 1 }],
             parallax: true,
-            fps: undefined,
+            fps: 0,
             maxDpr: 2,
             reducedMotion: "static",
             pauseWhenHidden: true,
@@ -93,10 +94,10 @@ describe("normalizeOptions", () => {
         expect(settings.density).toBe(0);
     });
 
-    test("ignores an fps cap that isn't positive", () => {
-        const settings = normalizeOptions({ fps: 0 });
+    test("turns an fps cap that isn't positive into no cap", () => {
+        const settings = normalizeOptions({ fps: -30 });
 
-        expect(settings.fps).toBeUndefined();
+        expect(settings.fps).toBe(0);
     });
 
     test("falls back to the default maxDpr when it isn't positive", () => {
@@ -138,12 +139,13 @@ describe("normalizeOptions", () => {
         ]);
     });
 
-    test("drops shapes whose weight isn't positive", () => {
+    test("drops shapes whose weight isn't a finite positive number", () => {
         const settings = normalizeOptions({
             shapes: [
                 { shape: star, weight: 0 },
                 { shape: crystal, weight: -1 },
                 { shape: dot, weight: Number.NaN },
+                { shape: crystal, weight: Number.POSITIVE_INFINITY },
                 { shape: star, weight: 2 },
             ],
         });
@@ -155,6 +157,14 @@ describe("normalizeOptions", () => {
         const settings = normalizeOptions({ shapes: [] });
 
         expect(settings.shapes).toEqual([{ shape: dot, weight: 1 }]);
+    });
+
+    test('falls back to "static" for an unknown reducedMotion mode', () => {
+        const options = { reducedMotion: "none" } as unknown as SnowOptions;
+
+        const settings = normalizeOptions(options);
+
+        expect(settings.reducedMotion).toBe("static");
     });
 
     test("restores the default for a key set to undefined, as update() merges it", () => {

@@ -1,26 +1,12 @@
-import { afterEach, describe, expect, test } from "vitest";
+import { describe, expect, onTestFinished, test, vi } from "vitest";
 import { createSnow, type Snow } from "../index";
-import { createContainer, hasVisiblePixels } from "./support";
-
-const cleanups: Array<() => void> = [];
-
-afterEach(() => {
-    for (const cleanup of cleanups.splice(0).reverse()) {
-        cleanup();
-    }
-});
+import { addContainer } from "./support/dom";
+import { nextFrame } from "./support/timing";
 
 function track(snow: Snow): Snow {
-    cleanups.push(() => snow.destroy());
+    onTestFinished(() => snow.destroy());
 
     return snow;
-}
-
-function addContainer(): HTMLDivElement {
-    const container = createContainer();
-    cleanups.push(() => container.remove());
-
-    return container;
 }
 
 describe("createSnow", () => {
@@ -46,10 +32,11 @@ describe("createSnow", () => {
 
     test("animates on the browser's own frames", async () => {
         const snow = track(createSnow(addContainer(), { count: 20, seed: 1 }));
+        const drawImage = vi.spyOn(snow.canvas.getContext("2d") as CanvasRenderingContext2D, "drawImage");
 
-        await new Promise(requestAnimationFrame);
-        await new Promise(requestAnimationFrame);
+        await nextFrame();
+        await nextFrame();
 
-        expect(hasVisiblePixels(snow.canvas)).toBe(true);
+        expect(drawImage).toHaveBeenCalled();
     });
 });

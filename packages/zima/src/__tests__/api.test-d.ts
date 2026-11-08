@@ -40,6 +40,20 @@ describe("SnowOptions", () => {
     test("accepts only the known reducedMotion modes", () => {
         expectTypeOf<SnowOptions["reducedMotion"]>().toEqualTypeOf<"static" | "reduce" | "ignore" | undefined>();
     });
+
+    test("accepts a config declared as const", () => {
+        const config = {
+            size: [2, 5],
+            color: ["#fff", "#cfe8ff"],
+            shapes: [star, { shape: crystal, weight: 2 }],
+        } as const;
+
+        expectTypeOf(config).toExtend<SnowOptions>();
+    });
+
+    test("accepts undefined for an option, which restores its default", () => {
+        expectTypeOf<{ count: undefined; color: undefined }>().toExtend<SnowOptions>();
+    });
 });
 
 describe("createSnow", () => {
@@ -51,9 +65,14 @@ describe("createSnow", () => {
         expectTypeOf(createSnow).toBeCallableWith(document.createElement("div"), { wind: 5 });
     });
 
-    test("returns a Snow with a read-only canvas", () => {
+    test("returns a Snow", () => {
         expectTypeOf(createSnow).returns.toEqualTypeOf<Snow>();
-        expectTypeOf<Snow["canvas"]>().toEqualTypeOf<HTMLCanvasElement>();
+    });
+});
+
+describe("Snow", () => {
+    test("has a read-only canvas", () => {
+        expectTypeOf<Pick<Snow, "canvas">>().toEqualTypeOf<{ readonly canvas: HTMLCanvasElement }>();
     });
 });
 
