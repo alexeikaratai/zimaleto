@@ -341,7 +341,7 @@ return <canvas ref={canvasRef} style={{ width: "100%", height: 300 }} />;
 ### Security
 
 - **Repository.** Rulesets:
-  - On `main`: changes only through PRs with green checks on an up-to-date branch, no force push or deletion, signed commits, and CodeQL results without high or critical security alerts.
+  - On `main`: changes only through PRs with green checks on an up-to-date branch, no force push or deletion, and CodeQL results without high or critical security alerts. A rule requiring signed commits was left out: it blocks PRs whose commits aren't signed, while every commit that reaches `main` is a squash merge that GitHub signs anyway.
   - On every tag: no updates or deletions.
 
   Other repository settings:
@@ -571,5 +571,5 @@ Decided on 2026-11-07 unless a row gives another date.
 | Demo deploy (2026-11-09) | GitHub Pages with GitHub Actions as the source. The `deploy` job runs on `main` after Test, in the `github-pages` environment, which accepts `main` only. |
 | Staged releases (2026-11-09) | CI stages each release through npm trusted publishing, and it goes live only after the owner approves it with 2FA on npmjs.com. |
 | First publish (2026-11-09) | The packages start as `0.0.0-stage` placeholders staged once from a local checkout, so trusted publishing can be set up before `0.1.0` and `0.1.0` comes from CI with provenance. |
-| Security hardening (2026-11-09) | After a security audit, the release runs as four least-privilege jobs, and privileged jobs skip the cache. Actions are restricted to an allowlist with enforced SHA pins, and outside contributors' fork PRs need approval. CodeQL is required on `main`, with signed commits and protected tags. pnpm refuses trust downgrades. `SECURITY.md` explains how to report. |
+| Security hardening (2026-11-09) | After a security audit, the release runs as four least-privilege jobs, and privileged jobs skip the cache. Actions are restricted to an allowlist with enforced SHA pins, and outside contributors' fork PRs need approval. CodeQL is required on `main`, and tags are protected. pnpm refuses trust downgrades. `SECURITY.md` explains how to report. |
 | Repo protection (2026-11-08) | A ruleset on `main`: changes only through PRs, merged only when Lint, Typecheck, Build and size and Test pass on an up-to-date branch; no force push, deletion or bypass, admins included. Squash merge only, with linear history; branches are deleted after merge. Dependabot alerts and security updates, secret scanning with push protection, and private vulnerability reporting are on. |
