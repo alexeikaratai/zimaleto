@@ -118,6 +118,9 @@ jobs:
               with:
                   persist-credentials: false
             - uses: ./.github/actions/setup
+              with:
+                  # A cache from another run could carry code into a job that can publish or write.
+                  cache: false
             - run: pnpm --filter @zimaleto/playground build
             - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
             - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
@@ -126,17 +129,32 @@ jobs:
             - id: deployment
               uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
 
-    release:
-        name: Release
+    # The release runs as four jobs, so that no job holds both a token that writes to GitHub and the OIDC token that
+    # stages on npm, and only the stage job builds anything.
+    release-plan:
+        name: Release plan
         needs: deploy
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         runs-on: ubuntu-latest
         timeout-minutes: 10
-        # Staging on npm takes an OIDC token; everything written to GitHub goes through the release app's token.
-        permissions:
-            contents: read
-            id-token: write
-        environment: npm
+        outputs:
+            mode: ${{ steps.plan.outputs.mode }}
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  # The plan looks for the tag of the current version.
+                  fetch-depth: 0
+                  persist-credentials: false
+            - id: plan
+              run: sh scripts/release-plan.sh >> "$GITHUB_OUTPUT"
+
+    version-pr:
+        name: Version PR
+        needs: release-plan
+        if: ${{ needs.release-plan.outputs.mode == 'version' }}
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        environment: release
         steps:
             # A pull request opened with the default token wouldn't trigger CI, so the release app opens it.
             - id: app-token
@@ -148,14 +166,67 @@ jobs:
                   permission-pull-requests: write
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
-                  # The changelog needs the history, and the release script looks for existing tags.
+                  # The changelog links each change to its pull request through the history.
                   fetch-depth: 0
                   persist-credentials: false
             - uses: ./.github/actions/setup
-            # With changesets left, it opens or updates the Version Packages PR; without, it runs the release script.
-            - uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
+              with:
+                  # A cache from another run could carry code into a job that can publish or write.
+                  cache: false
+            - uses: changesets/action/version@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
+              env:
+                  GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
               with:
                   github-token: ${{ steps.app-token.outputs.token }}
-                  publish-script: pnpm release
                   pr-title: "chore: version packages"
                   commit-message: "chore: version packages"
+
+    stage:
+        name: Stage on npm
+        needs: release-plan
+        if: ${{ needs.release-plan.outputs.mode == 'stage' }}
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        # The only job that can mint an OIDC token for npm, and it gets no token that writes to GitHub.
+        permissions:
+            contents: read
+            id-token: write
+        environment: npm
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  persist-credentials: false
+            - uses: ./.github/actions/setup
+              with:
+                  # A cache from another run could carry code into a job that can publish or write.
+                  cache: false
+            - run: pnpm turbo run build --filter="./packages/*"
+            # npm keeps each staged version private until the owner approves it with 2FA.
+            - run: pnpm stage publish --recursive --no-git-checks
+
+    tag:
+        name: Tag release
+        needs: stage
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        environment: release
+        steps:
+            - id: app-token
+              uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+              with:
+                  client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+                  private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+                  permission-contents: write
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  fetch-depth: 0
+                  persist-credentials: false
+            - uses: ./.github/actions/setup
+              with:
+                  # A cache from another run could carry code into a job that can publish or write.
+                  cache: false
+            # changeset tag reports the new tags; the action pushes them and creates the GitHub releases.
+            - uses: changesets/action/publish@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
+              with:
+                  github-token: ${{ steps.app-token.outputs.token }}
+                  script: pnpm changeset tag

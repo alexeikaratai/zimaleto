@@ -20,7 +20,6 @@
         "size": "turbo run size --filter=./packages/*",
         "verify": "pnpm lint && turbo run typecheck test build size",
         "changeset": "changeset",
-        "release": "sh scripts/release.sh",
         "prepare": "husky"
     },
     "devDependencies": {
