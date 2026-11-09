@@ -9,7 +9,7 @@ permissions:
     contents: read
 
 # A new push to a pull request cancels its older run. A run on main that has started always finishes, because its
-# last jobs will deploy and release; a newer push only replaces one that is still queued.
+# last jobs deploy and release; a newer push only replaces one that is still queued.
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
     cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -20,7 +20,7 @@ jobs:
         runs-on: ubuntu-latest
         timeout-minutes: 10
         steps:
-            - uses: actions/checkout@v7
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   persist-credentials: false
             - uses: ./.github/actions/setup
@@ -32,7 +32,7 @@ jobs:
         runs-on: ubuntu-latest
         timeout-minutes: 10
         steps:
-            - uses: actions/checkout@v7
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   persist-credentials: false
             - uses: ./.github/actions/setup
@@ -44,7 +44,7 @@ jobs:
         runs-on: ubuntu-latest
         timeout-minutes: 10
         steps:
-            - uses: actions/checkout@v7
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   persist-credentials: false
             - uses: ./.github/actions/setup
@@ -57,7 +57,7 @@ jobs:
         runs-on: ubuntu-latest
         timeout-minutes: 10
         steps:
-            - uses: actions/checkout@v7
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   persist-credentials: false
             - uses: ./.github/actions/setup
@@ -68,7 +68,7 @@ jobs:
 
             - name: Cache Playwright browsers
               id: playwright-cache
-              uses: actions/cache@v6
+              uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
               with:
                   path: ~/.cache/ms-playwright
                   key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ steps.playwright.outputs.version }}
@@ -85,7 +85,7 @@ jobs:
 
             - name: Upload coverage
               if: ${{ !cancelled() }}
-              uses: actions/upload-artifact@v7
+              uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
               with:
                   name: coverage
                   path: packages/*/coverage/
@@ -93,9 +93,35 @@ jobs:
 
             - name: Upload screenshots of failed browser tests
               if: ${{ failure() }}
-              uses: actions/upload-artifact@v7
+              uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
               with:
                   name: failure-screenshots
                   path: packages/*/.vitest/
                   include-hidden-files: true
                   if-no-files-found: ignore
+
+    deploy:
+        name: Deploy demo
+        needs: test
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        permissions:
+            contents: read
+            pages: write
+            id-token: write
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  persist-credentials: false
+            - uses: ./.github/actions/setup
+            - run: pnpm --filter @zimaleto/playground build
+            - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+            - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+              with:
+                  path: apps/playground/dist
+            - id: deployment
+              uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
