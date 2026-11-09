@@ -60,7 +60,7 @@
     },
     "overrides": [
         {
-            "includes": ["**/*.config.ts"],
+            "includes": ["**/*.config.ts", "examples/nextjs/app/**/page.tsx", "examples/nextjs/app/**/layout.tsx"],
             "linter": {
                 "rules": {
                     "style": {
