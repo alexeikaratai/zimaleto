@@ -20,10 +20,12 @@
         "size": "turbo run size --filter=./packages/*",
         "verify": "pnpm lint && turbo run typecheck test build size",
         "changeset": "changeset",
+        "release": "sh scripts/release.sh",
         "prepare": "husky"
     },
     "devDependencies": {
         "@biomejs/biome": "2.6.6",
+        "@changesets/changelog-github": "^1.0.1",
         "@changesets/cli": "^3.0.3",
         "@vitest/coverage-v8": "catalog:",
         "@vitest/ui": "catalog:",
