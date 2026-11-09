@@ -4,8 +4,6 @@ Tiny canvas snowfall for the web: zero dependencies, safe to import during serve
 
 [Live demo](https://alexeikaratai.github.io/zimaleto/) · [React wrapper](https://github.com/alexeikaratai/zimaleto/tree/main/packages/zima-react) · [Examples](https://github.com/alexeikaratai/zimaleto/tree/main/examples)
 
-> Not on npm yet: the first release will be 0.1.0.
-
 ## Install
 
 ```sh

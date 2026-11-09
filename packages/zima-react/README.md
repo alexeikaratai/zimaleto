@@ -4,8 +4,6 @@ React 19 wrapper for [@zimaleto/zima](https://github.com/alexeikaratai/zimaleto/
 
 [Live demo](https://alexeikaratai.github.io/zimaleto/) · [Next.js example](https://github.com/alexeikaratai/zimaleto/tree/main/examples/nextjs)
 
-> Not on npm yet: the first release will be 0.1.0.
-
 ## Install
 
 ```sh
