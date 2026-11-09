@@ -43,6 +43,14 @@ export default defineConfig({
                     },
                 },
             },
+            {
+                extends: true,
+                test: {
+                    name: "dist",
+                    environment: "node",
+                    include: ["src/**/__tests__/*.dist.test.ts"],
+                },
+            },
         ],
     },
 });
