@@ -1,0 +1,10 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "jsx": "react-jsx",
+        "allowJs": false,
+        "incremental": false,
+        "plugins": [{ "name": "next" }]
+    },
+    "include": ["app", "next.config.ts"]
+}

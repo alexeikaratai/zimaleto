@@ -1,6 +1,9 @@
 node_modules/
 dist/
 coverage/
+# Next.js build output and the types file it writes
+.next/
+next-env.d.ts
 .turbo/
 *.tsbuildinfo
 tsconfig.vitest-temp.json

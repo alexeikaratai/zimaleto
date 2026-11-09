@@ -13,6 +13,7 @@ Read [PLAN.md](PLAN.md) before starting any task. It holds the architecture, the
 | `packages/zima` | `@zimaleto/zima` | Framework-agnostic core: zero dependencies, ≤ 2.5 KB brotli |
 | `packages/zima-react` | `@zimaleto/zima-react` | React 19 wrapper, ≤ 650 B on top of the core |
 | `apps/playground` | — | Vite + React app for manual tuning, deployed to GitHub Pages |
+| `examples/vanilla`, `examples/nextjs` | — | Vite without a framework, and the Next.js App Router; built in CI |
 
 Vue and Angular wrappers come later as their own packages: `@zimaleto/zima-vue` and `@zimaleto/zima-angular`.
 
@@ -50,7 +51,7 @@ Biome is the only formatter and linter: no Prettier, no ESLint. The settings liv
 - Name types instead of inlining object types in parameters or generic arguments.
 - Exported functions and constants have explicit types, because `isolatedDeclarations` requires them.
 - No file extensions in import paths (`./engine`, not `./engine.ts`). Type-only imports use `import type`.
-- Named exports only. Config files that require a default export are the only exception.
+- Named exports only. Files whose framework requires a default export are the exception: config files, and `page.tsx` and `layout.tsx` in the Next.js example.
 - No single-letter names, including callbacks and loops (`index`, not `i`). The coordinates `x` and `y` are the exception.
 - No commented-out code; git keeps the history.
 

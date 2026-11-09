@@ -1,0 +1,17 @@
+{
+    "name": "@zimaleto/example-vanilla",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "typecheck": "tsc"
+    },
+    "dependencies": {
+        "@zimaleto/zima": "workspace:^"
+    },
+    "devDependencies": {
+        "typescript": "catalog:",
+        "vite": "catalog:"
+    }
+}

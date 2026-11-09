@@ -1,11 +1,15 @@
 # zimaleto
 
-Tiny, zero-dependency canvas snowfall for the web. Work in progress: nothing is published yet.
+Tiny, zero-dependency canvas snowfall for the web. [Live demo](https://alexeikaratai.github.io/zimaleto/)
+
+> Not on npm yet: the first release will be 0.1.0.
 
 | Package | What |
 |---|---|
-| [`@zimaleto/zima`](packages/zima) | Framework-agnostic core: zero dependencies, ≤ 2.5 KB brotli |
+| [`@zimaleto/zima`](packages/zima) | Framework-agnostic core: zero dependencies, ≤ 2.5 KB brotli, plus a `<script>` build |
 | [`@zimaleto/zima-react`](packages/zima-react) | React 19 wrapper, ≤ 650 B on top of the core |
+
+Examples: [Vite without a framework](examples/vanilla) and [the Next.js App Router](examples/nextjs). The demo is the [playground](apps/playground), deployed from `main`.
 
 ## Development
 

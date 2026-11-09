@@ -23,6 +23,8 @@
     "files": [
         "dist"
     ],
+    "unpkg": "./dist/zimaleto.iife.js",
+    "jsdelivr": "./dist/zimaleto.iife.js",
     "exports": {
         ".": "./src/index.ts",
         "./package.json": "./package.json"
@@ -60,6 +62,12 @@
             "path": "dist/index.js",
             "import": "{ createSnow }",
             "limit": "2.5 KB"
+        },
+        {
+            "name": "<script> build with every shape",
+            "path": "dist/zimaleto.iife.js",
+            "rolldown": false,
+            "limit": "3 KB"
         }
     ]
 }

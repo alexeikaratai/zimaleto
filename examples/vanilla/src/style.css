@@ -1,0 +1,31 @@
+body {
+    margin: 0;
+    font-family: system-ui, sans-serif;
+    color: #e8eef7;
+    background: #070d1a;
+}
+
+.hero {
+    display: grid;
+    place-content: center;
+    gap: 16px;
+    min-height: 60vh;
+    text-align: center;
+    background: linear-gradient(180deg, #0b1d3a, #1d3557);
+}
+
+.hero h1 {
+    margin: 0;
+    font-size: 56px;
+}
+
+.hero button {
+    justify-self: center;
+    font: inherit;
+    color: inherit;
+    background: rgb(255 255 255 / 8%);
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 8px;
+    padding: 6px 16px;
+    cursor: pointer;
+}
