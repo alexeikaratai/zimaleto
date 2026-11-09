@@ -2,7 +2,7 @@
 
 > Tiny, zero-dependency canvas snowfall. Framework-agnostic TypeScript core + thin framework wrappers (React first; Vue and Angular later).
 
-Status: **M3 · React** · Last updated: 2026-11-08 · Repo: [alexeikaratai/zimaleto](https://github.com/alexeikaratai/zimaleto) · npm: `@zimaleto/*`
+Status: **M4 · Polish** · Last updated: 2026-11-09 · Repo: [alexeikaratai/zimaleto](https://github.com/alexeikaratai/zimaleto) · npm: `@zimaleto/*`
 
 Working rules and code style: [CLAUDE.md](CLAUDE.md).
 
@@ -36,6 +36,7 @@ Versions are the latest on the public npm registry as of 2026-11-08 and are neve
 | UI | React / React DOM | 19.3.x | wrapper peer: `^19` |
 | Types | @types/react / @types/react-dom / @types/node | 19.3.x / 19.3.x / 26.6.x | React ships without types; Node types are for the `dist` tests, which read the built files |
 | Playground | Vite + @vitejs/plugin-react | 8.3.x / 6.2.x | also deployed as the demo on GitHub Pages |
+| Example app | Next.js | 16.4.x | the App Router example; `next build` type-checks with TypeScript 7 |
 | Tests | **Vitest** + @vitest/ui | 5.1.x | single test runner for every package; the UI backs `pnpm test:ui`; see §8 |
 | Tests: coverage | @vitest/coverage-v8 | 5.1.x | thresholds enforced in CI |
 | Tests: real browser | @vitest/browser-playwright + Playwright (Chromium) | 5.1.x / 1.65.x | real canvas, observers, rAF |
@@ -69,7 +70,8 @@ zimaleto/
 ├─ .changeset/
 ├─ .github/
 │  ├─ actions/setup/           # pnpm, Node from .nvmrc, pnpm install
-│  └─ workflows/ci.yml         # lint → typecheck → build → test; on main: deploy (M4) → release (M5)
+│  ├─ workflows/ci.yml         # lint → typecheck → build → test; on main: deploy → release (M5)
+│  └─ dependabot.yml           # keeps the pinned action SHAs current
 ├─ packages/
 │  ├─ zima/                    # @zimaleto/zima (core)
 │  │  ├─ src/
@@ -94,12 +96,12 @@ zimaleto/
 │  │  │  └─ __tests__/
 │  │  │     ├─ index.test.ts           # the entry imports in Node without touching the DOM
 │  │  │     ├─ index.browser.test.ts   # createSnow() with real frames
-│  │  │     ├─ iife.dist.test.ts       # runs the built IIFE (M4)
+│  │  │     ├─ iife.dist.test.ts       # runs the <script> build in an empty node:vm context
 │  │  │     ├─ api.test-d.ts           # type tests for the public API
 │  │  │     └─ support/                # manual clock, media stubs, DOM and canvas helpers
 │  │  ├─ README.md, LICENSE    # npm packs only what's inside the package folder
-│  │  ├─ vitest.config.ts      # projects: unit (Node), browser (Chromium); dist (Node) in M4
-│  │  └─ tsdown.config.ts
+│  │  ├─ vitest.config.ts      # projects: unit (Node), browser (Chromium), dist (Node)
+│  │  └─ tsdown.config.ts      # two builds: ESM for npm, and the minified IIFE for <script> tags
 │  └─ zima-react/             # @zimaleto/zima-react
 │     ├─ src/
 │     │  ├─ index.ts
@@ -121,7 +123,9 @@ zimaleto/
 ├─ apps/
 │  └─ playground/              # Vite + React app with live option controls; the demo
 │     └─ src/                  # controls/ (one file per panel section), fields/, stage/, options/
-└─ examples/                   # M4: Vite without a framework, Next.js App Router
+└─ examples/
+   ├─ vanilla/                 # Vite without a framework: createSnow() on a hero element
+   └─ nextjs/                  # Next.js App Router: <Snowfall> from a client component
 ```
 
 Later: `packages/zima-vue`, `packages/zima-angular`, `apps/docs`.
@@ -135,7 +139,7 @@ Later: `packages/zima-vue`, `packages/zima-angular`, `apps/docs`.
 - **Public registry only.** The repo's `.npmrc` pins `registry=https://registry.npmjs.org/`, whatever the machine's global npm config says.
 - **`pnpm-workspace.yaml` catalog** pins every dependency that more than one package uses: React and its types, TypeScript, Vite, Vitest with its `@vitest/*` packages, Playwright, tsdown, publint, attw, size-limit and `@types/node`. Packages refer to them as `"catalog:"`. Internal dependencies use `"workspace:^"`. A named catalog can hold a second version for some packages, such as TypeScript 6 for Vue and Angular later (§9).
 - **`turbo.json`** lists `tsconfig.base.json` in `globalDependencies`: every package config extends it, and Turborepo otherwise hashes only files inside a package. Tasks:
-  - `build`: `dependsOn: ["^build"]`, `outputs: ["dist/**"]`
+  - `build`: `dependsOn: ["^build"]`, `outputs: ["dist/**", ".next/**", "!.next/cache/**"]`
   - `typecheck`: `dependsOn: ["transit"]`, no outputs. The packages read each other's source through `exports`, so a change in the core has to invalidate the wrapper's and the playground's typecheck. An empty `transit` task with `dependsOn: ["^transit"]` adds the dependencies' files to the hash without making their typecheck run first.
   - `test`: `dependsOn: ["build"]`, `outputs: ["coverage/**"]`. Runs every Vitest project of the package (unit, browser, dist) in one run with coverage thresholds. It builds first because the `dist` tests read the built files. Core's browser project needs Chromium.
   - `test:unit`: `dependsOn: ["transit"]`, no outputs, no build. Runs only the `unit` project (Node or happy-dom, with the SSR and type tests) without thresholds: the fast local loop.
@@ -143,7 +147,7 @@ Later: `packages/zima-vue`, `packages/zima-angular`, `apps/docs`.
   - `dev`: `cache: false`, `persistent: true`
 - **Lint isn't a Turborepo task.** `pnpm lint` runs Biome once over the whole repo, which is faster than splitting it per package and needs no cache.
 - **tsdown config:** `platform: "browser"`, `publint: true`, `attw: true` (its default `esm-only` profile fits ESM-only packages). Both checks only warn by default, so `failOnWarn: true` turns any build warning into a failure, locally as in CI. The dev loop never runs tsdown, so this costs nothing while working. tsdown packs the package with the detected package manager (`pnpm pack`), so the checks see `publishConfig.exports`. The React build suppresses Rolldown's warning that bundling may drop `"use client"`: a single entry chunk keeps it, and a `dist` test checks that.
-- **`biome.json`** (the rules are in CLAUDE.md): formatter with 4-space indent, line width 120, double quotes, semicolons, JSX `attributePosition: "multiline"`; import organizing on; `preset: "recommended"` plus the `react` domain; rules that enforce CLAUDE.md (`type` over `interface`, no `enum`, `import type`/`export type`, no `any`); `style/noDefaultExport` on, with an override for config files that need a default export. It reads `.gitignore` and skips `.claude/`. Markdown formatting is off, because it pads every table row to the widest cell. `pnpm lint` passes `--error-on-warnings`, because some recommended rules, such as unused imports and focused tests, only warn.
+- **`biome.json`** (the rules are in CLAUDE.md): formatter with 4-space indent, line width 120, double quotes, semicolons, JSX `attributePosition: "multiline"`; import organizing on; `preset: "recommended"` plus the `react` domain; rules that enforce CLAUDE.md (`type` over `interface`, no `enum`, `import type`/`export type`, no `any`); `style/noDefaultExport` on, with an override for config files and the Next.js example's `page.tsx` and `layout.tsx`, which need a default export. It reads `.gitignore` and skips `.claude/`. Markdown formatting is off, because it pads every table row to the widest cell. `pnpm lint` passes `--error-on-warnings`, because some recommended rules, such as unused imports and focused tests, only warn.
 - **Pre-commit hook.** husky runs `biome check --write --staged --error-on-warnings --no-errors-on-unmatched` and re-stages the fixed files. It re-stages whole files, so it refuses to run while a staged file also has unstaged changes. CI runs the same check on every file.
 - **`tsconfig.base.json`:** `target: ES2022`, `module: ESNext`, `moduleResolution: bundler`, `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes` (so the public types say where `undefined` is allowed), `isolatedDeclarations`, `verbatimModuleSyntax`, `jsx: react-jsx`, `noEmit` (tsdown does the emitting), `lib: [ES2022, DOM, DOM.Iterable]`.
 - **Editor.** `.vscode/extensions.json` is committed and recommends the Biome extension. `.vscode/settings.json` holds personal settings, so it's gitignored; M0 adds Biome as the default formatter and `importModuleSpecifierEnding: "minimal"` to the local copy.
@@ -296,8 +300,8 @@ return <canvas ref={canvasRef} style={{ width: "100%", height: 300 }} />;
 - **Props** are all core options, plus `fullscreen?: boolean` and `paused?: boolean`, plus canvas attributes (`className`, `style`, `aria-hidden` defaults to `true`). A canvas attribute that shares a name with a core option is left out: React's non-standard `color` attribute would narrow `color` to a string. `width`, `height` and `children` aren't accepted, because the engine manages the canvas size. `<Snowfall>` tells options from canvas attributes by a list of option names; a type check fails the build if the core gains an option that the list doesn't name.
   - Default layout fills the parent: `position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none`. The parent needs a `position` other than `static`.
   - `fullscreen` gives an overlay: `position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999`, the same styles as the core overlay. `style` overrides any of these. Unlike the core overlay, it renders in place, so an ancestor with a `transform` or `filter` makes it cover that ancestor instead of the viewport; it belongs near the app root.
-- **Server Components.** The entry is `"use client"`, so `text()` and `image()` have to be called in a client component, while the built-in shapes pass as props. The README and the Next.js example show this (M4).
-- **Testing apps.** jsdom has no `matchMedia`, `ResizeObserver`, `IntersectionObserver` or 2D context, so apps that render `<Snowfall>` in jsdom tests mock the package. The README says so (M4).
+- **Server Components.** The entry is `"use client"`, so `text()` and `image()` have to be called in a client component, while the built-in shapes pass as props. The README and the Next.js example show this.
+- **Testing apps.** jsdom has no `matchMedia`, `ResizeObserver`, `IntersectionObserver` or 2D context, so apps that render `<Snowfall>` in jsdom tests mock the package. The README says so.
 - **`@zimaleto/zima` is a regular dependency** (`workspace:^`), not bundled in, so it's never duplicated. Core's shapes and types are re-exported, so users need only one package.
 
 ---
@@ -306,10 +310,10 @@ return <canvas ref={canvasRef} style={{ width: "100%", height: 300 }} />;
 
 - **ESM-only** (`"type": "module"`), `sideEffects: false`, `files: ["dist"]`, types in `exports`. `@zimaleto/zima-react` declares `@types/react` `^19` as an optional peer, because its `.d.ts` imports React's types.
 - **Package metadata.** Each package has its own `README.md` and a copy of `LICENSE`, because npm packs only what's inside the package folder. `repository` (with `directory`), `homepage` and `bugs` point to the GitHub repo; npm rejects provenance when `repository.url` doesn't match the repo that publishes.
-- **(M4) Core also ships `dist/zimaleto.iife.js`** for `<script>` and CDN use (unpkg, jsDelivr), exposing `window.Zimaleto`. The `unpkg` and `jsdelivr` fields in `package.json` point to it.
+- **Core also ships `dist/zimaleto.iife.js`** for `<script>` and CDN use (unpkg, jsDelivr), exposing `window.Zimaleto`. The `unpkg` and `jsdelivr` fields in `package.json` point to it. tsdown builds it from the same entry as a second config, minified and without `Symbol.toStringTag`, and size-limit measures the file as it is (`rolldown: false`).
 - **Size budgets** (size-limit, enforced in CI). A budget is never raised without the owner's approval.
   - `@zimaleto/zima`, `import { createSnow }` (includes the default `dot`): ≤ 2.5 KB brotli (raised from 2 KB in M2, see §10). It measures 2.48 KB after the fixes from the post-M3 review.
-  - `@zimaleto/zima`, IIFE build with every shape (M4): ≤ 3 KB brotli. Every export together already measures about 2.96 KB as ESM, so M4 checks this budget first.
+  - `@zimaleto/zima`, `<script>` build with every shape: ≤ 3 KB brotli. It measures 2.9 KB.
   - `@zimaleto/zima-react`, `import { Snowfall }` excluding core and React: ≤ 650 B brotli (raised from 500 B in M3, see §10)
 - **Versioning.** Changesets in **fixed** mode for the `@zimaleto/zima*` packages while on 0.x (the private playground stays out). One version for all packages is simpler for users.
 - **Publishing.** The `release` job, the last job of the CI workflow on `main`, runs `changesets/action`. It opens a "Version Packages" PR, and merging that PR runs `changeset publish`, which in a pnpm repo uses `pnpm pack` and `pnpm publish`: they swap in `publishConfig.exports` and rewrite `workspace:^` (plain `npm publish` would do neither). pnpm 12 publishes via **npm Trusted Publishing** (GitHub OIDC; the workflow needs `id-token: write`), which adds provenance and needs no long-lived `NPM_TOKEN`.
@@ -319,9 +323,8 @@ return <canvas ref={canvasRef} style={{ width: "100%", height: 300 }} />;
   - A PR opened with the default `GITHUB_TOKEN` doesn't trigger workflows, so the required checks would never run on the Version Packages PR and `main`'s ruleset would block it. The release job therefore opens it with a GitHub App token.
   - A manual publish uses `pnpm build && pnpm -r publish`, never `npm publish`: npm ignores `publishConfig.exports` and doesn't rewrite `workspace:^`.
   - The release job runs in a GitHub Environment limited to `main`, and npm's trusted-publisher entry names that environment, so a branch that edits `ci.yml` can't publish.
-  - Before any job gets `id-token: write`, every action is pinned to a commit SHA with a version comment, and Dependabot keeps them current (directories `/` and `/.github/actions/*`).
   - `@changesets/changelog-github` is an option for PR links and author credit in the changelog.
-- **(M4) Demo.** The `deploy` job builds the playground on every push to `main`, after the tests pass, and deploys it to GitHub Pages at `https://alexeikaratai.github.io/zimaleto/` (Vite `base: "/zimaleto/"`, Pages source: GitHub Actions). The READMEs link to it.
+- **Demo.** The `deploy` job builds the playground on every push to `main`, after the tests pass, and deploys it to GitHub Pages at `https://alexeikaratai.github.io/zimaleto/` (Vite `base: "/zimaleto/"`, Pages source: GitHub Actions). The `github-pages` environment accepts deployments from `main` only. The READMEs link to it.
 
 ---
 
@@ -423,7 +426,7 @@ Core is mocked with `vi.mock` (one shared mock in `__tests__/snowMock.ts`), exce
 
 ### Build checks (`*.dist.test.ts`)
 
-- **Core (M4):** running `dist/zimaleto.iife.js` in a bare `node:vm` context defines `Zimaleto.createSnow` without touching the DOM.
+- **Core:** running `dist/zimaleto.iife.js` in a bare `node:vm` context doesn't touch the DOM, and it puts `createSnow` and every shape on `Zimaleto`.
 - **React (M3):** the built entry file starts with `"use client"`.
 
 ### Type tests
@@ -446,10 +449,10 @@ One workflow, `ci.yml`, runs its jobs in a strict order. Each job is a separate 
 2. **Typecheck:** `pnpm typecheck`
 3. **Build and size:** `pnpm build`, then `pnpm size`
 4. **Test:** installs Chromium (cached by Playwright version), runs `pnpm test` and uploads the coverage reports
-5. **Deploy** (M4, `main` only): the playground to GitHub Pages
+5. **Deploy demo** (`main` only): builds the playground and deploys it to GitHub Pages, with `pages: write` and `id-token: write`
 6. **Release** (M5, `main` only): Changesets and npm
 
-A composite action, `.github/actions/setup`, installs pnpm, Node from `.nvmrc` and the dependencies for every job. Every job times out after 10 minutes, and checkouts don't keep the token (`persist-credentials: false`). When tests fail, the job uploads the browser tests' failure screenshots from `packages/*/.vitest/`. A new push to a pull request cancels its older run. A run on `main` that has started always finishes, because its last jobs deploy and release; a newer push only replaces one that is still queued.
+A composite action, `.github/actions/setup`, installs pnpm, Node from `.nvmrc` and the dependencies for every job. Every action is pinned to a commit SHA with a version comment, because the deploy job can mint an OIDC token, and Dependabot updates the pins in one grouped PR a month (directories `/` and `/.github/actions/*`). Every job times out after 10 minutes, and checkouts don't keep the token (`persist-credentials: false`). When tests fail, the job uploads the browser tests' failure screenshots from `packages/*/.vitest/`. A new push to a pull request cancels its older run. A run on `main` that has started always finishes, because its last jobs deploy and release; a newer push only replaces one that is still queued.
 
 ### Rules
 
@@ -484,8 +487,8 @@ A composite action, `.github/actions/setup`, installs pnpm, Node from `.nvmrc` a
 - **M1 · Core MVP.** Engine loop, the `dot` shape, all three targets (none for the page overlay, a canvas, a container), start on creation, count/density, size, speed, wind/gust, sway, rotation, opacity, color lists, parallax, `fps` cap, `seed`, resize and DPR handling, visibility pause, reduced motion, `update()`, `destroy()`. The playground gets live controls that drive `createSnow` directly. Tests: the core unit and browser suites from §8.
 - **M2 · Shapes.** `star`, `crystal`, `text()`, `image()` with async loading, custom `Shape`, weighted mix, sprite cache. The `shapes` option and the sprite cache took `createSnow` from 1.99 KB to 2.31 KB, so the owner raised its budget to 2.5 KB. Tests: shape selection, sprite rebuild on `update()`, image loading, and type tests for `Shape`.
 - **M3 · React.** `<Snowfall>` (with `fullscreen` and `paused`), `useSnowfall`, `"use client"`; the playground switches to `<Snowfall>`. Tests: the React, SSR, type and `dist` tests from §8.
-- **M4 · Polish.** IIFE build with its smoke test and 3 KB budget, the `deploy` job for the GitHub Pages demo, README for each package, and examples in `examples/`: Vite without a framework (`createSnow()`) and the Next.js App Router. The examples build in CI with the rest of the workspace. If `next build` still type-checks through the TypeScript JS API, the Next.js example takes TypeScript 6 from a named catalog.
-  - The page overlay appends to `<body>`, so the README tells `<script>` users to load the IIFE with `defer`.
+- **M4 · Polish.** IIFE build with its smoke test and 3 KB budget, the `deploy` job for the GitHub Pages demo, README for each package, and examples in `examples/`: Vite without a framework (`createSnow()`) and the Next.js App Router. The examples build in CI with the rest of the workspace. `next build` in Next.js 16.4 type-checks with TypeScript 7, so the example needs no TypeScript 6 catalog.
+  - The page overlay appends to `<body>`, so the README tells `<script>` users to load the build at the end of `<body>` or wait for `DOMContentLoaded`.
   - Next.js needs default exports in `page.tsx` and `layout.tsx`, so CLAUDE.md's named-export rule and the Biome override widen to cover them.
   - The READMEs cover the notes from §6: a canvas needs a CSS size, `text()` and `image()` belong in client components, and apps mock the package in jsdom tests.
 - **M5 · Release 0.1.0.** The `release` job, Trusted Publishing setup (with a manual first publish if npm needs it), the repo permission for the Version Packages PR, and the first changeset release. The npm org already exists.
@@ -523,10 +526,12 @@ Decided on 2026-11-07 unless a row gives another date.
 | `<Snowfall>` layout | Fills its parent by default; the `fullscreen` prop turns it into a fixed overlay. |
 | Node | 26 LTS via nvm (`.nvmrc`) |
 | Tests | Vitest only (§8), in `__tests__/` folders |
-| CI pipeline (2026-11-08) | One workflow with jobs in a strict order: lint → typecheck → build and size → test, then on `main` deploy (M4) → release (M5). |
+| CI pipeline (2026-11-08) | One workflow with jobs in a strict order: lint → typecheck → build and size → test, then on `main` deploy → release (M5). |
 | React size budget (2026-11-08) | `import { Snowfall }` may take up to 650 B brotli instead of 500 B, measured like the core's `import { createSnow }`. Comparing options by value, telling options from canvas attributes, forwarding `ref` and the layout styles need about 590 B. |
 | Core size budget (2026-11-08) | `import { createSnow }` may take up to 2.5 KB brotli instead of 2 KB. The weighted `shapes` option, the sprite cache and image loading add about 300 B, and the M1 engine alone already filled 2 KB. |
 | Code structure (2026-11-08) | Source is grouped into module folders: `engine/`, `options/`, `physics/` and `shapes/` in the core, features in the playground. Files stay under about 300 lines, constants live next to the code that uses them, and tests sit in each module's `__tests__/`, one file per topic. |
 | Paused snow (2026-11-08) | `stop()` and `paused` freeze the snow and keep the last frame on screen at any point, including before the first frame. |
 | Warnings and coverage (2026-11-08) | Lint (`--error-on-warnings`) and the build (`failOnWarn: true`) fail on warnings locally too, so `pnpm verify` matches CI. Coverage thresholds are 100% on all four metrics in both packages. |
+| Action pins (2026-11-09) | Every action is pinned to a commit SHA with a version comment before any job gets `id-token: write`; Dependabot updates the pins monthly in one grouped PR. |
+| Demo deploy (2026-11-09) | GitHub Pages with GitHub Actions as the source. The `deploy` job runs on `main` after Test, in the `github-pages` environment, which accepts `main` only. |
 | Repo protection (2026-11-08) | A ruleset on `main`: changes only through PRs, merged only when Lint, Typecheck, Build and size and Test pass on an up-to-date branch; no force push, deletion or bypass, admins included. Squash merge only, with linear history; branches are deleted after merge. Dependabot alerts and security updates, secret scanning with push protection, and private vulnerability reporting are on. |
