@@ -24,6 +24,10 @@ describe("SnowfallProps", () => {
         expectTypeOf<SnowfallProps>().not.toHaveProperty("children");
     });
 
+    test("doesn't take HTML content, which a canvas never shows", () => {
+        expectTypeOf<SnowfallProps>().not.toHaveProperty("dangerouslySetInnerHTML");
+    });
+
     test("rejects unknown props", () => {
         // @ts-expect-error snowflakes isn't a Snowfall prop
         expectTypeOf(Snowfall).toBeCallableWith({ snowflakes: 10 });

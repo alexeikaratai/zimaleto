@@ -8,7 +8,10 @@ export type SnowfallProps = SnowfallOptions & {
      * `transform` or `filter`, which would make it cover them instead.
      */
     fullscreen?: boolean | undefined;
-} & Omit<ComponentProps<"canvas">, keyof SnowfallOptions | "fullscreen" | "width" | "height" | "children">;
+} & Omit<
+        ComponentProps<"canvas">,
+        keyof SnowfallOptions | "fullscreen" | "width" | "height" | "children" | "dangerouslySetInnerHTML"
+    >;
 
 type PropValues = Record<string, unknown>;
 
