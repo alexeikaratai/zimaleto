@@ -2,8 +2,6 @@
 
 Tiny, zero-dependency canvas snowfall for the web. [Live demo](https://alexeikaratai.github.io/zimaleto/)
 
-> Not on npm yet: the first release will be 0.1.0.
-
 | Package | What |
 |---|---|
 | [`@zimaleto/zima`](packages/zima) | Framework-agnostic core: zero dependencies, ≤ 2.5 KB brotli, plus a `<script>` build |

@@ -1,6 +1,11 @@
 name: Setup
 description: Install pnpm, Node from .nvmrc and the workspace dependencies.
 
+inputs:
+    cache:
+        description: Whether to restore and save the pnpm store cache. Jobs that can publish or write turn it off.
+        default: "true"
+
 runs:
     using: composite
     steps:
@@ -9,7 +14,7 @@ runs:
         - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
           with:
               node-version-file: .nvmrc
-              cache: pnpm
+              cache: ${{ inputs.cache == 'true' && 'pnpm' || '' }}
 
         - run: pnpm install --frozen-lockfile
           shell: bash

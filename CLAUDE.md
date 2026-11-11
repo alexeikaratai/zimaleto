@@ -23,7 +23,7 @@ Vue and Angular wrappers come later as their own packages: `@zimaleto/zima-vue` 
 - `main` is protected: changes land only through pull requests with green CI. Never push to `main` or rewrite its history.
 - A milestone is done when its features are covered by tests and CI is green.
 - Before finishing any change, run `pnpm lint:fix && pnpm verify`. `verify` runs the same checks as CI: lint, typecheck, tests, build and size, and like CI it fails on lint and build warnings. The browser tests need Chromium, installed once with `pnpm exec playwright install chromium`.
-- Dependencies: add the latest version from the public npm registry (`npm view <package> version`). Don't copy versions from other projects. The repo's `.npmrc` pins the registry.
+- Dependencies: add the latest version from the public npm registry (`npm view <package> version`). Don't copy versions from other projects. The repo's `.npmrc` pins the registry. pnpm installs only versions that are at least a day old, so a release from today has to wait.
 - Keep the size budgets (`pnpm size`). Never raise a budget without asking.
 
 ## Commits and pull requests
@@ -84,6 +84,17 @@ Biome is the only formatter and linter: no Prettier, no ESLint. The settings liv
 - `vi.mock` goes at file scope, and mocks are restored after each test.
 - A bug fix starts with a failing test.
 - Coverage stays at 100% for statements, branches, functions and lines; the thresholds fail the run below that.
+
+## Security
+
+- Don't loosen the supply-chain settings in `pnpm-workspace.yaml` (`minimumReleaseAge`, `blockExoticSubdeps`, `strictDepBuilds`, `trustPolicy`) without asking. A dependency may run install scripts only after a review adds it to `allowBuilds`.
+- Workflows:
+  - Pin every action to a full commit SHA with a version comment. The repo allows only GitHub's own actions, `pnpm/action-setup` and `changesets/*`.
+  - Give each job only the permissions it needs.
+  - Never use `pull_request_target`, and never put `${{ }}` expressions from events into `run:` scripts.
+  - Jobs that can publish or write to the repo skip the dependency cache.
+- Never commit secrets. The release app's credentials live in the `release` environment, and only `main` can use the `release` and `npm` environments.
+- The library never uses `eval`, `new Function` or `innerHTML`, so it runs under a strict Content Security Policy.
 
 ## Constraints
 

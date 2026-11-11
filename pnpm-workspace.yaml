@@ -21,3 +21,14 @@ catalog:
     typescript: ^7.0.2
     vite: ^8.3.6
     vitest: ^5.1.0
+
+# Supply-chain checks. pnpm 12 defaults to the first three already; they're spelled out so that a change of defaults
+# can't loosen them.
+# Versions younger than a day aren't installed, which is how long a malicious release usually survives.
+minimumReleaseAge: 1440
+# Only direct dependencies may come from git or a URL.
+blockExoticSubdeps: true
+# Dependencies may not run install scripts unless allowBuilds lists them.
+strictDepBuilds: true
+# Fails when a package loses the trusted publisher or provenance that its earlier versions had.
+trustPolicy: no-downgrade

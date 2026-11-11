@@ -2,7 +2,7 @@
 
 > Tiny, zero-dependency canvas snowfall. Framework-agnostic TypeScript core + thin framework wrappers (React first; Vue and Angular later).
 
-Status: **M4 · Polish** · Last updated: 2026-11-09 · Repo: [alexeikaratai/zimaleto](https://github.com/alexeikaratai/zimaleto) · npm: `@zimaleto/*`
+Status: **M5 · Release 0.1.0** · Last updated: 2026-11-09 · Repo: [alexeikaratai/zimaleto](https://github.com/alexeikaratai/zimaleto) · npm: `@zimaleto/*`
 
 Working rules and code style: [CLAUDE.md](CLAUDE.md).
 
@@ -45,7 +45,7 @@ Versions are the latest on the public npm registry as of 2026-11-08 and are neve
 | Git hooks | husky | 9.1.x | pre-commit runs Biome on staged files |
 | Size budget | size-limit + preset-small-lib | 14.3.x | fails CI if a budget is exceeded |
 | Package checks | publint + @arethetypeswrong/core | 0.3.x / 0.18.x | run by tsdown; they fail CI through `failOnWarn` (§4) |
-| Releases | Changesets | 3.0.x | GitHub Action + npm Trusted Publishing (OIDC, provenance) |
+| Releases | Changesets + @changesets/changelog-github | 3.0.x / 1.0.x | `changesets/action` v2; npm trusted publishing with staged releases (OIDC, provenance) |
 
 ---
 
@@ -62,6 +62,8 @@ zimaleto/
 ├─ LICENSE                     # MIT
 ├─ README.md
 ├─ package.json                # private root; packageManager, engines.node >=26 (root only)
+├─ SECURITY.md                 # how to report a vulnerability, and how releases are protected
+├─ scripts/release-plan.sh     # decides whether the release jobs open a Version PR, stage a version, or do nothing
 ├─ pnpm-workspace.yaml         # packages/*, apps/*, examples/*, catalog
 ├─ turbo.json
 ├─ biome.json
@@ -316,15 +318,48 @@ return <canvas ref={canvasRef} style={{ width: "100%", height: 300 }} />;
   - `@zimaleto/zima`, `<script>` build with every shape: ≤ 3 KB brotli. It measures 2.9 KB.
   - `@zimaleto/zima-react`, `import { Snowfall }` excluding core and React: ≤ 650 B brotli (raised from 500 B in M3, see §10)
 - **Versioning.** Changesets in **fixed** mode for the `@zimaleto/zima*` packages while on 0.x (the private playground stays out). One version for all packages is simpler for users.
-- **Publishing.** The `release` job, the last job of the CI workflow on `main`, runs `changesets/action`. It opens a "Version Packages" PR, and merging that PR runs `changeset publish`, which in a pnpm repo uses `pnpm pack` and `pnpm publish`: they swap in `publishConfig.exports` and rewrite `workspace:^` (plain `npm publish` would do neither). pnpm 12 publishes via **npm Trusted Publishing** (GitHub OIDC; the workflow needs `id-token: write`), which adds provenance and needs no long-lived `NPM_TOKEN`.
-- **Release setup (M5).**
-  - Trusted Publishing is configured per package on npmjs.com for the `ci.yml` workflow, because the release job lives there. If npm still requires a package to exist before a trusted publisher can be added, the first publish of each package is done by hand with 2FA.
-  - The repo must allow GitHub Actions to create pull requests (Settings → Actions → General), so `changesets/action` can open the Version Packages PR.
-  - A PR opened with the default `GITHUB_TOKEN` doesn't trigger workflows, so the required checks would never run on the Version Packages PR and `main`'s ruleset would block it. The release job therefore opens it with a GitHub App token.
-  - A manual publish uses `pnpm build && pnpm -r publish`, never `npm publish`: npm ignores `publishConfig.exports` and doesn't rewrite `workspace:^`.
-  - The release job runs in a GitHub Environment limited to `main`, and npm's trusted-publisher entry names that environment, so a branch that edits `ci.yml` can't publish.
-  - `@changesets/changelog-github` is an option for PR links and author credit in the changelog.
+- **Publishing.** Four jobs at the end of the CI workflow on `main` release the packages. They're split so that no job holds both a token that writes to GitHub and the OIDC token that stages on npm, and only the stage job builds anything:
+  1. **Release plan** runs `scripts/release-plan.sh`. With changesets pending, the mode is `version`. Without changesets, a version that has no git tag yet means `stage`. Otherwise the mode is `none`, as it is for the unreleased `0.0.0`. The tag marks a staged version, because npm doesn't list it until it's approved, so the registry can't tell.
+  2. **Version PR** (`version`) opens or updates the "Version Packages" PR with `changesets/action/version`, using the release app's token. `@changesets/changelog-github` writes the changelog with PR links.
+  3. **Stage on npm** (`stage`) builds the packages and runs `pnpm stage publish --recursive`. pnpm packs each package, which swaps in `publishConfig.exports` and rewrites `workspace:^` (plain `npm publish` would do neither). It authenticates through npm trusted publishing (GitHub OIDC, `id-token: write`), which adds provenance and needs no `NPM_TOKEN`. Staged publishing can't be batched, so the packages go one by one.
+  4. **Tag release** runs `changeset tag` through `changesets/action/publish`, which pushes the tags and creates the GitHub releases with the release app's token.
+- **Staged releases.** The trusted publisher of each package allows `npm stage publish` only. A staged version goes live when a maintainer approves it with 2FA on npmjs.com (Staged Packages) or with `npm stage approve`, so a compromised CI or GitHub account can't release on its own. The tag and the GitHub release appear at staging time, before the approval.
+- **Release setup.**
+  - Two GitHub Environments accept `main` only:
+    - `npm` is used by the stage job. npm's trusted-publisher entries name it, so a branch that edits `ci.yml` can't stage.
+    - `release` holds the release app's credentials, for the Version PR and Tag release jobs.
+  - A PR opened with the default `GITHUB_TOKEN` doesn't trigger workflows, so the required checks would never run on the Version Packages PR. A GitHub App with contents and pull-requests write access opens it instead.
+    - Its client ID is the `RELEASE_APP_CLIENT_ID` variable of the `release` environment, and its private key is the `RELEASE_APP_PRIVATE_KEY` secret.
+    - Each job asks for only the permissions it needs. The actions push commits and tags through the GitHub API as the app, and GitHub signs them.
+  - `npm trust` works only for packages that exist, so the first release starts with placeholders: a maintainer runs `pnpm build` and `pnpm stage publish --recursive` once from a local checkout. npm creates the packages with a public `0.0.0-stage` placeholder and keeps the staged build private; the maintainer rejects it.
+  - Then, for each package: `npm trust github <package> --file ci.yml --repo alexeikaratai/zimaleto --env npm --allow-stage-publish` (npm 11.15 or later, with 2FA). A trust configuration expires unless it stages within 2 days, so the Version Packages PR is merged right after.
+  - A manual publish, if ever needed, uses `pnpm build && pnpm -r publish`, never `npm publish`.
 - **Demo.** The `deploy` job builds the playground on every push to `main`, after the tests pass, and deploys it to GitHub Pages at `https://alexeikaratai.github.io/zimaleto/` (Vite `base: "/zimaleto/"`, Pages source: GitHub Actions). The `github-pages` environment accepts deployments from `main` only. The READMEs link to it.
+
+---
+
+### Security
+
+- **Repository.** Rulesets:
+  - On `main`: changes only through PRs with green checks on an up-to-date branch, no force push or deletion, and CodeQL results without high or critical security alerts. A rule requiring signed commits was left out: it blocks PRs whose commits aren't signed, while every commit that reaches `main` is a squash merge that GitHub signs anyway.
+  - On every tag: no updates or deletions.
+
+  Other repository settings:
+  - CodeQL default setup scans the TypeScript and the workflows with the extended query suite.
+  - Secret scanning with push protection, Dependabot alerts and security updates, and private vulnerability reporting are on; `SECURITY.md` points reporters to the latter.
+- **Actions.**
+  - Only GitHub's own actions, `pnpm/action-setup` and `changesets/*` may run, each pinned to a full commit SHA, which GitHub enforces.
+  - The default `GITHUB_TOKEN` is read-only and can't approve pull requests.
+  - Workflow runs from forks need approval for every outside contributor.
+  - Jobs that can publish or write skip the dependency cache.
+- **Supply chain.** In `pnpm-workspace.yaml`:
+  - Versions younger than a day aren't installed (`minimumReleaseAge`).
+  - Transitive dependencies can't come from git or URLs (`blockExoticSubdeps`).
+  - Install scripts run only for packages in `allowBuilds`, which is empty (`strictDepBuilds`).
+  - Installing fails when a package loses the trusted publisher or provenance that its earlier versions had (`trustPolicy: no-downgrade`).
+  - Dependabot updates the action pins monthly.
+- **Library.** No `eval`, `new Function` or HTML sinks, so it runs under a strict CSP. `<Snowfall>` doesn't accept `children` or `dangerouslySetInnerHTML`.
+- **Residual risk.** The release app can write to the repo. If a dependency of the Version PR or Tag release jobs were compromised, it could open and merge a PR that passes the checks, because a lone owner can't be required to approve their own PRs. npm releases would still need the owner's 2FA approval.
 
 ---
 
@@ -450,7 +485,7 @@ One workflow, `ci.yml`, runs its jobs in a strict order. Each job is a separate 
 3. **Build and size:** `pnpm build`, then `pnpm size`
 4. **Test:** installs Chromium (cached by Playwright version), runs `pnpm test` and uploads the coverage reports
 5. **Deploy demo** (`main` only): builds the playground and deploys it to GitHub Pages, with `pages: write` and `id-token: write`
-6. **Release** (M5, `main` only): Changesets and npm
+6. **Release plan**, then **Version PR**, or **Stage on npm** followed by **Tag release** (`main` only): see §7.
 
 A composite action, `.github/actions/setup`, installs pnpm, Node from `.nvmrc` and the dependencies for every job. Every action is pinned to a commit SHA with a version comment, because the deploy job can mint an OIDC token, and Dependabot updates the pins in one grouped PR a month (directories `/` and `/.github/actions/*`). Every job times out after 10 minutes, and checkouts don't keep the token (`persist-credentials: false`). When tests fail, the job uploads the browser tests' failure screenshots from `packages/*/.vitest/`. A new push to a pull request cancels its older run. A run on `main` that has started always finishes, because its last jobs deploy and release; a newer push only replaces one that is still queued.
 
@@ -491,7 +526,7 @@ A composite action, `.github/actions/setup`, installs pnpm, Node from `.nvmrc` a
   - The page overlay appends to `<body>`, so the README tells `<script>` users to load the build at the end of `<body>` or wait for `DOMContentLoaded`.
   - Next.js needs default exports in `page.tsx` and `layout.tsx`, so CLAUDE.md's named-export rule and the Biome override widen to cover them.
   - The READMEs cover the notes from §6: a canvas needs a CSS size, `text()` and `image()` belong in client components, and apps mock the package in jsdom tests.
-- **M5 · Release 0.1.0.** The `release` job, Trusted Publishing setup (with a manual first publish if npm needs it), the repo permission for the Version Packages PR, and the first changeset release. The npm org already exists.
+- **M5 · Release 0.1.0.** The `release` job with staged publishing, the release app and the `npm` environment, placeholder packages and trusted publishing (§7), and the first changeset release, `0.1.0`. The npm org already exists.
 - **Later.**
   - `@zimaleto/zima-vue`: Vue 3 component plus a `useSnowfall` composable.
   - `@zimaleto/zima-angular`: standalone component with signals. It needs ng-packagr and the Angular Package Format, so it's built outside tsdown and wired into Turborepo as its own `build`.
@@ -534,4 +569,7 @@ Decided on 2026-11-07 unless a row gives another date.
 | Warnings and coverage (2026-11-08) | Lint (`--error-on-warnings`) and the build (`failOnWarn: true`) fail on warnings locally too, so `pnpm verify` matches CI. Coverage thresholds are 100% on all four metrics in both packages. |
 | Action pins (2026-11-09) | Every action is pinned to a commit SHA with a version comment before any job gets `id-token: write`; Dependabot updates the pins monthly in one grouped PR. |
 | Demo deploy (2026-11-09) | GitHub Pages with GitHub Actions as the source. The `deploy` job runs on `main` after Test, in the `github-pages` environment, which accepts `main` only. |
+| Staged releases (2026-11-09) | CI stages each release through npm trusted publishing, and it goes live only after the owner approves it with 2FA on npmjs.com. |
+| First publish (2026-11-09) | The packages start as `0.0.0-stage` placeholders staged once from a local checkout, so trusted publishing can be set up before `0.1.0` and `0.1.0` comes from CI with provenance. |
+| Security hardening (2026-11-09) | After a security audit, the release runs as four least-privilege jobs, and privileged jobs skip the cache. Actions are restricted to an allowlist with enforced SHA pins, and outside contributors' fork PRs need approval. CodeQL is required on `main`, and tags are protected. pnpm refuses trust downgrades. `SECURITY.md` explains how to report. |
 | Repo protection (2026-11-08) | A ruleset on `main`: changes only through PRs, merged only when Lint, Typecheck, Build and size and Test pass on an up-to-date branch; no force push, deletion or bypass, admins included. Squash merge only, with linear history; branches are deleted after merge. Dependabot alerts and security updates, secret scanning with push protection, and private vulnerability reporting are on. |
