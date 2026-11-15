@@ -1,5 +1,6 @@
 import { onTestFinished } from "vitest";
-import { createEngine, type Snow } from "../../engine/engine";
+import { createEngine } from "../../engine/engine";
+import type { Snow } from "../../engine/snow";
 import type { SnowOptions } from "../../options/snowOptions";
 import { createManualClock, type ManualClock } from "./clock";
 

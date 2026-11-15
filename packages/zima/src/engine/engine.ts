@@ -5,21 +5,8 @@ import { gustAt, limitStep, step, swayOffset } from "../physics/motion";
 import { createRandom, type Random } from "../physics/random";
 import { mountCanvas } from "./canvas";
 import type { Clock } from "./clock";
+import type { Snow } from "./snow";
 import { createSpriteCache, SPRITE_EXTENT } from "./sprites";
-
-/** A running snowfall. */
-export type Snow = {
-    /** The canvas the snow is drawn on: the one you passed in, or the one `createSnow()` added. */
-    readonly canvas: HTMLCanvasElement;
-    /** Resumes the animation after `stop()`. Reduced motion still applies. */
-    start(): void;
-    /** Pauses the animation and keeps the last frame on screen. Only `start()` resumes it; showing the tab again doesn't. */
-    stop(): void;
-    /** Changes options live, without re-creating anything. A key set to `undefined` goes back to its default. */
-    update(options: SnowOptions): void;
-    /** Stops the loop, disconnects observers and removes the canvas it added. Calling it again does nothing. */
-    destroy(): void;
-};
 
 // One second minus 10% slack, so a 30 fps cap on a 60 Hz display draws every other frame instead of every third. The
 // default cap of 100 draws every frame on displays up to 110 Hz and skips frames on faster ones.
