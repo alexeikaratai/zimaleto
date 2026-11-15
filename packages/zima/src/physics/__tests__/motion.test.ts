@@ -92,11 +92,15 @@ describe("step", () => {
 
 describe("limitStep", () => {
     test("keeps the length of a regular frame", () => {
-        expect(limitStep(16, 0)).toBe(16);
+        expect(limitStep(16, 100)).toBe(16);
     });
 
     test("limits a stalled frame to 50 ms", () => {
-        expect(limitStep(1000, 0)).toBe(50);
+        expect(limitStep(1000, 100)).toBe(50);
+    });
+
+    test("limits a stalled frame to 50 ms when every frame draws", () => {
+        expect(limitStep(1000, Number.POSITIVE_INFINITY)).toBe(50);
     });
 
     test("keeps a whole frame of a low fps cap", () => {

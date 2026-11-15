@@ -22,7 +22,7 @@ describe("normalizeOptions", () => {
             colors: ["#fff"],
             shapes: [{ shape: dot, weight: 1 }],
             parallax: true,
-            fps: 0,
+            fps: 100,
             maxDpr: 2,
             reducedMotion: "static",
             pauseWhenHidden: true,
@@ -94,10 +94,16 @@ describe("normalizeOptions", () => {
         expect(settings.density).toBe(0);
     });
 
-    test("turns an fps cap that isn't positive into no cap", () => {
-        const settings = normalizeOptions({ fps: -30 });
+    test("falls back to the default fps cap when it isn't positive", () => {
+        const caps = [normalizeOptions({ fps: -30 }).fps, normalizeOptions({ fps: 0 }).fps];
 
-        expect(settings.fps).toBe(0);
+        expect(caps).toEqual([100, 100]);
+    });
+
+    test("keeps an infinite fps cap, which draws every frame", () => {
+        const settings = normalizeOptions({ fps: Number.POSITIVE_INFINITY });
+
+        expect(settings.fps).toBe(Number.POSITIVE_INFINITY);
     });
 
     test("falls back to the default maxDpr when it isn't positive", () => {

@@ -26,12 +26,28 @@ describe("frame timing", () => {
         expect(drawn).toHaveLength(3);
     });
 
-    test("draws every frame without a cap", () => {
+    test.each([
+        ["every frame", "a 60 Hz", 1000 / 60, 6],
+        ["every frame", "a 100 Hz", 10, 6],
+        ["every other frame", "a 120 Hz", 1000 / 120, 3],
+        ["every other frame", "a 144 Hz", 1000 / 144, 3],
+    ])("draws %s by default on %s display", (_frames, _display, frameMs, drawCount) => {
         const { snow, clock } = startSnow({ count: 1 }, addContainer());
         const drawn = recordDrawnFlakes(snow.canvas);
 
         for (let frame = 0; frame < 6; frame += 1) {
-            clock.tick(16);
+            clock.tick(frameMs);
+        }
+
+        expect(drawn).toHaveLength(drawCount);
+    });
+
+    test("draws every frame of a 120 Hz display at fps Infinity", () => {
+        const { snow, clock } = startSnow({ count: 1, fps: Number.POSITIVE_INFINITY }, addContainer());
+        const drawn = recordDrawnFlakes(snow.canvas);
+
+        for (let frame = 0; frame < 6; frame += 1) {
+            clock.tick(1000 / 120);
         }
 
         expect(drawn).toHaveLength(6);

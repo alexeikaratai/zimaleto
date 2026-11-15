@@ -21,7 +21,8 @@ export type Snow = {
     destroy(): void;
 };
 
-// One second minus 10% slack, so a 30 fps cap on a 60 Hz display draws every other frame instead of every third.
+// One second minus 10% slack, so a 30 fps cap on a 60 Hz display draws every other frame instead of every third. The
+// default cap of 100 draws every frame on displays up to 110 Hz and skips frames on faster ones.
 const SLACKED_SECOND_MS = 900;
 
 export function createEngine(target: HTMLElement | undefined, initialOptions: SnowOptions, clock: Clock): Snow {
@@ -87,7 +88,7 @@ export function createEngine(target: HTMLElement | undefined, initialOptions: Sn
         // The first frame after a start sees an infinite gap, which passes the cap and is limited like a stall.
         const elapsedMs = time - lastFrameTime;
         const { fps } = settings;
-        const isAheadOfCap = fps > 0 && elapsedMs * fps < SLACKED_SECOND_MS;
+        const isAheadOfCap = elapsedMs * fps < SLACKED_SECOND_MS;
 
         if (isAheadOfCap) {
             return;

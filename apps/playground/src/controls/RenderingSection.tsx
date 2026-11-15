@@ -6,7 +6,8 @@ import { PanelSection } from "./PanelSection";
 import type { SectionProps } from "./sectionProps";
 
 const FPS_CHOICES: readonly SelectChoice<string>[] = [
-    { value: "display", label: "Display refresh rate" },
+    { value: "default", label: "Default: up to 100 fps" },
+    { value: "Infinity", label: "Every display frame" },
     { value: "60", label: "60 fps" },
     { value: "30", label: "30 fps" },
     { value: "15", label: "15 fps" },
@@ -27,10 +28,10 @@ const REDUCED_MOTION_CHOICES: readonly SelectChoice<ReducedMotion>[] = [
 
 /** How the snow is drawn: frame rate, pixel ratio, reduced motion, pausing and the random seed. */
 export function RenderingSection({ options, onOptionsChange }: SectionProps): ReactElement {
-    const fpsChoice = options.fps === undefined ? "display" : String(options.fps);
+    const fpsChoice = options.fps === undefined ? "default" : String(options.fps);
 
     function handleFpsChange(value: string): void {
-        onOptionsChange({ fps: value === "display" ? undefined : Number(value) });
+        onOptionsChange({ fps: value === "default" ? undefined : Number(value) });
     }
 
     function handleMaxDprChange(value: string): void {
@@ -48,6 +49,7 @@ export function RenderingSection({ options, onOptionsChange }: SectionProps): Re
                 label="Frame rate"
                 value={fpsChoice}
                 choices={FPS_CHOICES}
+                hint="The default skips frames on displays faster than 100 Hz: 60 fps at 120 Hz."
                 onChange={handleFpsChange}
             />
             <SelectField
