@@ -80,6 +80,7 @@ zimaleto/
 │  │  │  ├─ index.ts           # public API: createSnow() and the re-exports
 │  │  │  ├─ engine/
 │  │  │  │  ├─ engine.ts       # createEngine(): state, frame loop, sizing, options, lifecycle
+│  │  │  │  ├─ snow.ts         # the public Snow type that createSnow() returns
 │  │  │  │  ├─ canvas.ts       # adds or adopts the canvas, styles it, positions the container
 │  │  │  │  ├─ sprites.ts      # pre-rendered flake sprites and shape readiness
 │  │  │  │  ├─ clock.ts        # the Clock type and the browser clock
@@ -118,13 +119,18 @@ zimaleto/
 │     │     ├─ index.test.ts           # re-exports of the core shapes
 │     │     ├─ directive.dist.test.ts  # the built entry starts with "use client"
 │     │     ├─ props.test-d.ts
-│     │     └─ snowMock.ts             # the mocked core shared by the tests
+│     │     └─ support/snowMock.ts     # the mocked core shared by the tests
 │     ├─ README.md, LICENSE
 │     ├─ vitest.config.ts      # projects: unit (happy-dom), dist (Node)
 │     └─ tsdown.config.ts
 ├─ apps/
 │  └─ playground/              # Vite + React app with live option controls; the demo
-│     ├─ src/                  # controls/ (one file per panel section), fields/, stage/, options/, performance/
+│     ├─ src/
+│     │  ├─ controls/          # the side panel: one file per section, and performance/ for the Performance section
+│     │  ├─ fields/            # form fields: slider, range, select, toggle, color presets
+│     │  ├─ stage/             # the snow for each target: page, element, own canvas
+│     │  ├─ options/           # the playground's options, shapes, color presets and the stress test
+│     │  └─ performance/       # the measuring code: frame meter, statistics, capacity search, baseline
 │     └─ vitest.config.ts      # one project: unit (Node), for the measuring code in performance/
 └─ examples/
    ├─ vanilla/                 # Vite without a framework: createSnow() on a hero element
@@ -163,7 +169,8 @@ First setup: `nvm install` (reads `.nvmrc`); `npm install -g pnpm` if that Node 
 
 | Command | Does |
 |---|---|
-| `pnpm dev` | `turbo run dev`: the playground's dev server |
+| `pnpm dev` | `turbo run dev`: the dev servers of the playground and both examples |
+| `pnpm playground` | the playground's dev server alone; `pnpm playground --host` opens it to the local network, for a phone |
 | `pnpm build` | `turbo run build` |
 | `pnpm typecheck` | `turbo run typecheck` |
 | `pnpm lint` | `biome check --error-on-warnings .` |
@@ -442,7 +449,7 @@ Tests live in a `__tests__/` folder in the module they test, one file per topic,
 
 ### `@zimaleto/zima-react`: happy-dom + Testing Library
 
-Core is mocked with `vi.mock` (one shared mock in `__tests__/snowMock.ts`), except in the SSR test, which renders with the real core, and the re-export test. The mock keeps state (`isRunning`, `isDestroyed`), so tests check what a snowfall would do rather than count calls. Calls to `update()` are compared with `toStrictEqual`, because `toEqual` ignores keys set to `undefined`.
+Core is mocked with `vi.mock` (one shared mock in `__tests__/support/snowMock.ts`), except in the SSR test, which renders with the real core, and the re-export test. The mock keeps state (`isRunning`, `isDestroyed`), so tests check what a snowfall would do rather than count calls. Calls to `update()` are compared with `toStrictEqual`, because `toEqual` ignores keys set to `undefined`.
 
 - **Instance lifecycle**
   - `<Snowfall>` creates exactly one instance on mount and destroys it on unmount.
@@ -615,7 +622,7 @@ Numbers come before optimizations, so that M7 and M8 keep the snow cheap.
   - A hidden tab or paused snow stops it.
 - **Steps**, so that later milestones can repeat them:
   1. Quit heavy background work: a busy machine drops frames early.
-  2. Open the playground in a maximized window: the demo, or `pnpm --filter @zimaleto/playground dev`. With `--host` added, a phone on the same network can open it too.
+  2. Open the playground in a maximized window: the demo, or `pnpm playground`. A phone on the same network can open `pnpm playground --host`.
   3. Press **Run baseline**, keep the tab in front, and note the table it shows.
   4. For the CPU use: reload, choose **Over the whole page**, wait 10 seconds, and read the tab's CPU in the browser's task manager. In Chrome that's the renderer and the GPU process.
 - **Results** on a MacBook Pro with an M4 Max (2026-11-14):

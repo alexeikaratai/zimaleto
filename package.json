@@ -8,6 +8,7 @@
     },
     "scripts": {
         "dev": "turbo run dev",
+        "playground": "pnpm --filter @zimaleto/playground dev",
         "build": "turbo run build",
         "typecheck": "turbo run typecheck",
         "lint": "biome check --error-on-warnings .",

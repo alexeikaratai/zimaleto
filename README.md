@@ -19,7 +19,7 @@ pnpm exec playwright install chromium
 pnpm verify
 ```
 
-`pnpm verify` runs the same checks as CI: lint, typecheck, tests, build and size. The roadmap is in [PLAN.md](PLAN.md), and the working rules and code style are in [CLAUDE.md](CLAUDE.md).
+`pnpm verify` runs the same checks as CI: lint, typecheck, tests, build and size. `pnpm playground` starts the playground at http://localhost:5173/zimaleto/. The roadmap is in [PLAN.md](PLAN.md), and the working rules and code style are in [CLAUDE.md](CLAUDE.md).
 
 ## License
 
