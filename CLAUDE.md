@@ -12,7 +12,7 @@ Read [PLAN.md](PLAN.md) before starting any task. It holds the architecture, the
 |---|---|---|
 | `packages/zima` | `@zimaleto/zima` | Framework-agnostic core: zero dependencies, ≤ 2.5 KB brotli |
 | `packages/zima-react` | `@zimaleto/zima-react` | React 19 wrapper, ≤ 650 B on top of the core |
-| `apps/playground` | — | Vite + React app for manual tuning, deployed to GitHub Pages |
+| `apps/playground` | — | Vite + React app for manual tuning and performance measurements, deployed to GitHub Pages |
 | `examples/vanilla`, `examples/nextjs` | — | Vite without a framework, and the Next.js App Router; built in CI |
 
 Vue and Angular wrappers come later as their own packages: `@zimaleto/zima-vue` and `@zimaleto/zima-angular`.
@@ -40,7 +40,7 @@ Biome is the only formatter and linter: no Prettier, no ESLint. The settings liv
 
 ### Structure
 
-- Group code into folders by module, each with one job: the core has `engine/`, `options/`, `physics/` and `shapes/`, and the playground has `controls/`, `fields/`, `stage/` and `options/`.
+- Group code into folders by module, each with one job: the core has `engine/`, `options/`, `physics/` and `shapes/`, and the playground has `controls/`, `fields/`, `stage/`, `options/` and `performance/`.
 - Keep files under about 300 lines, tests included. Split a file by responsibility before it grows past that.
 - Constants live next to the code that uses them, not in a shared constants file.
 

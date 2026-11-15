@@ -1,0 +1,24 @@
+import { defineConfig } from "vitest/config";
+
+export default defineConfig({
+    test: {
+        name: "unit",
+        environment: "node",
+        include: ["src/**/__tests__/*.test.ts"],
+        restoreMocks: true,
+        unstubGlobals: true,
+        coverage: {
+            provider: "v8",
+            // The measuring code. The components are for trying things out by hand, so they have no unit tests.
+            include: ["src/performance/**"],
+            exclude: ["src/**/__tests__/**"],
+            reporter: ["text", "lcov"],
+            thresholds: {
+                lines: 100,
+                functions: 100,
+                branches: 100,
+                statements: 100,
+            },
+        },
+    },
+});

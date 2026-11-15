@@ -1,4 +1,4 @@
-import { type ReactElement, useState } from "react";
+import { type ReactElement, useRef, useState } from "react";
 import { Controls } from "./controls/Controls";
 import { INITIAL_OPTIONS, type PlaygroundOptions, type TargetMode } from "./options/playgroundOptions";
 import { SnowStage } from "./stage/SnowStage";
@@ -8,6 +8,8 @@ export function App(): ReactElement {
     const [mode, setMode] = useState<TargetMode>("container");
     const [isPaused, setIsPaused] = useState(false);
     const [restartCount, setRestartCount] = useState(0);
+    // The snow's canvas, whichever target draws it, so the Performance section can report its size.
+    const canvasRef = useRef<HTMLCanvasElement>(null);
 
     function handleOptionsChange(changes: Partial<PlaygroundOptions>): void {
         setOptions((current) => ({ ...current, ...changes }));
@@ -23,6 +25,7 @@ export function App(): ReactElement {
                 options={options}
                 mode={mode}
                 isPaused={isPaused}
+                canvasRef={canvasRef}
                 onOptionsChange={handleOptionsChange}
                 onModeChange={setMode}
                 onPausedChange={setIsPaused}
@@ -33,6 +36,7 @@ export function App(): ReactElement {
                 mode={mode}
                 options={options}
                 isPaused={isPaused}
+                canvasRef={canvasRef}
             />
         </div>
     );

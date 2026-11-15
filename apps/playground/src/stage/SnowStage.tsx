@@ -1,5 +1,5 @@
 import { Snowfall, type SnowOptions, useSnowfall } from "@zimaleto/zima-react";
-import { type ReactElement, useRef } from "react";
+import type { ReactElement, RefObject } from "react";
 import { type PlaygroundOptions, type TargetMode, toSnowOptions } from "../options/playgroundOptions";
 import { toShapes } from "../options/shapes";
 
@@ -7,11 +7,13 @@ export type SnowStageProps = {
     mode: TargetMode;
     options: PlaygroundOptions;
     isPaused: boolean;
+    canvasRef: RefObject<HTMLCanvasElement | null>;
 };
 
 type SnowViewProps = {
     options: SnowOptions;
     isPaused: boolean;
+    canvasRef: RefObject<HTMLCanvasElement | null>;
 };
 
 const CAPTIONS: Record<TargetMode, string> = {
@@ -20,20 +22,20 @@ const CAPTIONS: Record<TargetMode, string> = {
     page: "<Snowfall fullscreen /> covers the viewport. Clicks pass through it.",
 };
 
-function ContainerSnow({ options, isPaused }: SnowViewProps): ReactElement {
+function ContainerSnow({ options, isPaused, canvasRef }: SnowViewProps): ReactElement {
     return (
         <div className="snow-surface">
             <h2 className="snow-title">Let it snow</h2>
             <Snowfall
                 {...options}
+                ref={canvasRef}
                 paused={isPaused}
             />
         </div>
     );
 }
 
-function CanvasSnow({ options, isPaused }: SnowViewProps): ReactElement {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
+function CanvasSnow({ options, isPaused, canvasRef }: SnowViewProps): ReactElement {
     useSnowfall(canvasRef, { ...options, paused: isPaused });
 
     return (
@@ -44,7 +46,7 @@ function CanvasSnow({ options, isPaused }: SnowViewProps): ReactElement {
     );
 }
 
-function PageSnow({ options, isPaused }: SnowViewProps): ReactElement {
+function PageSnow({ options, isPaused, canvasRef }: SnowViewProps): ReactElement {
     return (
         <>
             <div className="snow-surface">
@@ -52,6 +54,7 @@ function PageSnow({ options, isPaused }: SnowViewProps): ReactElement {
             </div>
             <Snowfall
                 {...options}
+                ref={canvasRef}
                 fullscreen
                 paused={isPaused}
             />
@@ -66,7 +69,7 @@ const VIEWS: Record<TargetMode, (props: SnowViewProps) => ReactElement> = {
 };
 
 /** Shows the snow for the chosen target through the React wrapper. */
-export function SnowStage({ mode, options, isPaused }: SnowStageProps): ReactElement {
+export function SnowStage({ mode, options, isPaused, canvasRef }: SnowStageProps): ReactElement {
     const View = VIEWS[mode];
     // The wrapper compares options by value, so rebuilding the shapes list on every render is fine.
     const snowOptions = toSnowOptions(options, toShapes(options.shapeWeights));
@@ -80,6 +83,7 @@ export function SnowStage({ mode, options, isPaused }: SnowStageProps): ReactEle
                 key={mode}
                 options={snowOptions}
                 isPaused={isPaused}
+                canvasRef={canvasRef}
             />
         </main>
     );
