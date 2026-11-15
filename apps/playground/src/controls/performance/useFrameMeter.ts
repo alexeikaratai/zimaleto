@@ -1,7 +1,7 @@
 import { type RefObject, useEffect, useRef, useState } from "react";
-import type { ReadFrames } from "../performance/bench";
-import { type FrameMeter, startFrameMeter } from "../performance/frameMeter";
-import { type FrameStats, NO_FRAMES } from "../performance/frameStats";
+import type { ReadFrames } from "../../performance/bench";
+import { type FrameMeter, startFrameMeter } from "../../performance/frameMeter";
+import { type FrameStats, NO_FRAMES } from "../../performance/frameStats";
 
 /** The size of the snow's canvas: in CSS px, and in device px for its bitmap. */
 export type CanvasSize = {

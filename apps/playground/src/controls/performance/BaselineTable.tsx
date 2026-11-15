@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import type { Baseline } from "../performance/baseline";
+import type { Baseline } from "../../performance/baseline";
 import { formatCount, formatMs } from "./format";
 
 export type BaselineTableProps = {

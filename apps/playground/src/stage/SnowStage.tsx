@@ -1,17 +1,14 @@
-import { Snowfall, type SnowOptions, useSnowfall } from "@zimaleto/zima-react";
 import type { ReactElement, RefObject } from "react";
 import { type PlaygroundOptions, type TargetMode, toSnowOptions } from "../options/playgroundOptions";
 import { toShapes } from "../options/shapes";
+import { CanvasSnow } from "./CanvasSnow";
+import { ContainerSnow } from "./ContainerSnow";
+import { PageSnow } from "./PageSnow";
+import type { SnowViewProps } from "./snowViewProps";
 
 export type SnowStageProps = {
     mode: TargetMode;
     options: PlaygroundOptions;
-    isPaused: boolean;
-    canvasRef: RefObject<HTMLCanvasElement | null>;
-};
-
-type SnowViewProps = {
-    options: SnowOptions;
     isPaused: boolean;
     canvasRef: RefObject<HTMLCanvasElement | null>;
 };
@@ -21,46 +18,6 @@ const CAPTIONS: Record<TargetMode, string> = {
     canvas: "useSnowfall(canvasRef, options) snows on a canvas you render yourself.",
     page: "<Snowfall fullscreen /> covers the viewport. Clicks pass through it.",
 };
-
-function ContainerSnow({ options, isPaused, canvasRef }: SnowViewProps): ReactElement {
-    return (
-        <div className="snow-surface">
-            <h2 className="snow-title">Let it snow</h2>
-            <Snowfall
-                {...options}
-                ref={canvasRef}
-                paused={isPaused}
-            />
-        </div>
-    );
-}
-
-function CanvasSnow({ options, isPaused, canvasRef }: SnowViewProps): ReactElement {
-    useSnowfall(canvasRef, { ...options, paused: isPaused });
-
-    return (
-        <canvas
-            ref={canvasRef}
-            className="snow-surface"
-        />
-    );
-}
-
-function PageSnow({ options, isPaused, canvasRef }: SnowViewProps): ReactElement {
-    return (
-        <>
-            <div className="snow-surface">
-                <h2 className="snow-title">Let it snow</h2>
-            </div>
-            <Snowfall
-                {...options}
-                ref={canvasRef}
-                fullscreen
-                paused={isPaused}
-            />
-        </>
-    );
-}
 
 const VIEWS: Record<TargetMode, (props: SnowViewProps) => ReactElement> = {
     container: ContainerSnow,

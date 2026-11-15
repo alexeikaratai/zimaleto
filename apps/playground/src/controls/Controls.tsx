@@ -3,7 +3,7 @@ import type { TargetMode } from "../options/playgroundOptions";
 import { AmountSection } from "./AmountSection";
 import { LookSection } from "./LookSection";
 import { MotionSection } from "./MotionSection";
-import { PerformanceSection } from "./PerformanceSection";
+import { PerformanceSection } from "./performance/PerformanceSection";
 import { RenderingSection } from "./RenderingSection";
 import { ShapesSection } from "./ShapesSection";
 import type { SectionProps } from "./sectionProps";

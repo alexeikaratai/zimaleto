@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { INITIAL_OPTIONS, type PlaygroundOptions } from "../options/playgroundOptions";
-import { type Baseline, runBaseline } from "../performance/baseline";
-import { type Bench, measureFrames, type ReadFrames } from "../performance/bench";
+import { INITIAL_OPTIONS, type PlaygroundOptions } from "../../options/playgroundOptions";
+import { type Baseline, runBaseline } from "../../performance/baseline";
+import { type Bench, measureFrames, type ReadFrames } from "../../performance/bench";
 
 /** Why a run ended early: the Stop button, a hidden tab, or paused snow. */
 export type StopReason = "stopped" | "hidden" | "paused";
