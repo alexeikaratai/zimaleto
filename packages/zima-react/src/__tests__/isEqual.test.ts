@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { isEqual } from "../isEqual";
-import { sparkle } from "./snowMock";
+import { sparkle } from "./support/snowMock";
 
 describe("isEqual", () => {
     test("treats new arrays with the same items as equal", () => {
