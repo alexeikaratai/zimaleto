@@ -19,7 +19,7 @@ export type Settings = {
     colors: string[];
     shapes: WeightedShape[];
     parallax: boolean;
-    /** Frame-rate cap, or 0 for none. */
+    /** Frame-rate cap. Always positive; `Infinity` draws every frame. */
     fps: number;
     maxDpr: number;
     reducedMotion: ReducedMotion;
@@ -87,7 +87,7 @@ export function normalizeOptions(options: SnowOptions): Settings {
         colors: toColors(options.color),
         shapes: toWeightedShapes(options.shapes),
         parallax: options.parallax ?? true,
-        fps: positiveOr(options.fps, 0),
+        fps: positiveOr(options.fps, 100),
         maxDpr: positiveOr(options.maxDpr, 2),
         reducedMotion: toReducedMotion(options.reducedMotion),
         pauseWhenHidden: options.pauseWhenHidden ?? true,

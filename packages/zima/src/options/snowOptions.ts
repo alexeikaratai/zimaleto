@@ -70,7 +70,11 @@ export type SnowOptions = {
      * @defaultValue true
      */
     parallax?: boolean | undefined;
-    /** Frame-rate cap. Unset means the display refresh rate. */
+    /**
+     * Frame-rate cap, with 10% slack. The default draws every frame on displays up to 100 Hz and skips frames on faster
+     * ones (60 fps at 120 Hz, 72 fps at 144 Hz), which roughly halves the work there. `Infinity` draws every frame.
+     * @defaultValue 100
+     */
     fps?: number | undefined;
     /**
      * Upper limit on `devicePixelRatio`, to protect performance on dense screens.

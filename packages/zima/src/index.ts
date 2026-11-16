@@ -1,8 +1,9 @@
 import { BROWSER_CLOCK } from "./engine/clock";
-import { createEngine, type Snow } from "./engine/engine";
+import { createEngine } from "./engine/engine";
+import type { Snow } from "./engine/snow";
 import type { SnowOptions } from "./options/snowOptions";
 
-export type { Snow } from "./engine/engine";
+export type { Snow } from "./engine/snow";
 export type { Range, ReducedMotion, SnowOptions } from "./options/snowOptions";
 export { crystal } from "./shapes/crystal";
 export { dot } from "./shapes/dot";

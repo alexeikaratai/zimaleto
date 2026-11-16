@@ -1,8 +1,9 @@
-import type { ReactElement } from "react";
+import type { ReactElement, RefObject } from "react";
 import type { TargetMode } from "../options/playgroundOptions";
 import { AmountSection } from "./AmountSection";
 import { LookSection } from "./LookSection";
 import { MotionSection } from "./MotionSection";
+import { PerformanceSection } from "./performance/PerformanceSection";
 import { RenderingSection } from "./RenderingSection";
 import { ShapesSection } from "./ShapesSection";
 import type { SectionProps } from "./sectionProps";
@@ -11,6 +12,7 @@ import { TargetSection } from "./TargetSection";
 export type ControlsProps = SectionProps & {
     mode: TargetMode;
     isPaused: boolean;
+    canvasRef: RefObject<HTMLCanvasElement | null>;
     onModeChange: (mode: TargetMode) => void;
     onPausedChange: (isPaused: boolean) => void;
     onRestart: () => void;
@@ -21,6 +23,7 @@ export function Controls({
     options,
     mode,
     isPaused,
+    canvasRef,
     onOptionsChange,
     onModeChange,
     onPausedChange,
@@ -41,6 +44,14 @@ export function Controls({
                 onModeChange={onModeChange}
                 onPausedChange={onPausedChange}
                 onRestart={onRestart}
+            />
+            <PerformanceSection
+                options={options}
+                isPaused={isPaused}
+                canvasRef={canvasRef}
+                onOptionsChange={onOptionsChange}
+                onModeChange={onModeChange}
+                onPausedChange={onPausedChange}
             />
             <AmountSection
                 options={options}

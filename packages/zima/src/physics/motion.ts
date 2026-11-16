@@ -9,18 +9,16 @@ export type Environment = {
     random: Random;
 };
 
-/** Longest step without an fps cap, so a stalled tab doesn't make flakes jump. */
+/** Longest step, so a stalled tab doesn't make flakes jump. */
 const MAX_STEP_MS = 50;
 const GUST_FREQUENCY = 0.5;
 
 /**
  * How far a frame moves the snow: the time since the last frame, limited so that a stalled tab doesn't make flakes
- * jump. Under an fps cap (0 for none) the limit is two of its frames, so a low cap keeps whole frames and full speed.
+ * jump. Under a cap below 40 fps the limit is two of its frames, so a low cap keeps whole frames and full speed.
  */
 export function limitStep(elapsedMs: number, fps: number): number {
-    const maxStepMs = fps > 0 ? Math.max(MAX_STEP_MS, 2000 / fps) : MAX_STEP_MS;
-
-    return Math.min(elapsedMs, maxStepMs);
+    return Math.min(elapsedMs, Math.max(MAX_STEP_MS, 2000 / fps));
 }
 
 /** Smooth wind variation at a moment in time. It stays within `gust` and never quite repeats. */

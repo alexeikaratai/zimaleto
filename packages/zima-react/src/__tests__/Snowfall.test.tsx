@@ -2,10 +2,10 @@ import { cleanup, render } from "@testing-library/react";
 import { createRef, StrictMode } from "react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { Snowfall } from "../Snowfall";
-import { core, liveSnow, sparkle } from "./snowMock";
+import { core, liveSnow, sparkle } from "./support/snowMock";
 
 vi.mock("@zimaleto/zima", async () => {
-    const { core: mockedCore } = await import("./snowMock");
+    const { core: mockedCore } = await import("./support/snowMock");
 
     return { createSnow: mockedCore.createSnow };
 });

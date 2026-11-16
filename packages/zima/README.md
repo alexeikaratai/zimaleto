@@ -60,7 +60,7 @@ Every option is optional, and `snow.update()` takes the same ones. A key set to 
 | `color` | `"#fff"` | One CSS color, or a list to pick from. |
 | `shapes` | `[dot]` | Shapes to pick from, optionally weighted. |
 | `parallax` | `true` | Bigger flakes fall faster and look closer. |
-| `fps` | — | Frame-rate cap. Unset means the display's refresh rate. |
+| `fps` | `100` | Frame-rate cap. The default draws every frame on displays up to 100 Hz and skips frames on faster ones (60 fps at 120 Hz), which roughly halves the work there. `Infinity` draws every frame. |
 | `maxDpr` | `2` | Upper limit on the pixel ratio, to spare dense screens. |
 | `reducedMotion` | `"static"` | When the OS asks for reduced motion: `"static"` draws one still frame, `"reduce"` keeps half the flakes at half the speed, `"ignore"` animates as usual. |
 | `pauseWhenHidden` | `true` | Pause in a background tab or while the canvas is off-screen. |

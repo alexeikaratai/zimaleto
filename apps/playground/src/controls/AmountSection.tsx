@@ -34,7 +34,7 @@ export function AmountSection({ options, onOptionsChange }: SectionProps): React
                     label="Count"
                     value={options.count}
                     min={0}
-                    max={1000}
+                    max={5000}
                     step={10}
                     onChange={(count) => onOptionsChange({ count })}
                 />

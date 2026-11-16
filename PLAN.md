@@ -2,7 +2,7 @@
 
 > Tiny, zero-dependency canvas snowfall. Framework-agnostic TypeScript core + thin framework wrappers (React first; Vue and Angular later).
 
-Status: **0.1.0 released** on 2026-11-11 · Next: **M6 · Performance baseline** (§11) · Last updated: 2026-11-11 · Repo: [alexeikaratai/zimaleto](https://github.com/alexeikaratai/zimaleto) · npm: `@zimaleto/*`
+Status: **0.1.0 released** on 2026-11-11 · **M6 · Performance baseline** in review · Next: **M7 · More snowflakes** (§11) · Last updated: 2026-11-15 · Repo: [alexeikaratai/zimaleto](https://github.com/alexeikaratai/zimaleto) · npm: `@zimaleto/*`
 
 Working rules and code style: [CLAUDE.md](CLAUDE.md).
 
@@ -80,6 +80,7 @@ zimaleto/
 │  │  │  ├─ index.ts           # public API: createSnow() and the re-exports
 │  │  │  ├─ engine/
 │  │  │  │  ├─ engine.ts       # createEngine(): state, frame loop, sizing, options, lifecycle
+│  │  │  │  ├─ snow.ts         # the public Snow type that createSnow() returns
 │  │  │  │  ├─ canvas.ts       # adds or adopts the canvas, styles it, positions the container
 │  │  │  │  ├─ sprites.ts      # pre-rendered flake sprites and shape readiness
 │  │  │  │  ├─ clock.ts        # the Clock type and the browser clock
@@ -118,13 +119,19 @@ zimaleto/
 │     │     ├─ index.test.ts           # re-exports of the core shapes
 │     │     ├─ directive.dist.test.ts  # the built entry starts with "use client"
 │     │     ├─ props.test-d.ts
-│     │     └─ snowMock.ts             # the mocked core shared by the tests
+│     │     └─ support/snowMock.ts     # the mocked core shared by the tests
 │     ├─ README.md, LICENSE
 │     ├─ vitest.config.ts      # projects: unit (happy-dom), dist (Node)
 │     └─ tsdown.config.ts
 ├─ apps/
 │  └─ playground/              # Vite + React app with live option controls; the demo
-│     └─ src/                  # controls/ (one file per panel section), fields/, stage/, options/
+│     ├─ src/
+│     │  ├─ controls/          # the side panel: one file per section, and performance/ for the Performance section
+│     │  ├─ fields/            # form fields: slider, range, select, toggle, color presets
+│     │  ├─ stage/             # the snow for each target: page, element, own canvas
+│     │  ├─ options/           # the playground's options, shapes, color presets and the stress test
+│     │  └─ performance/       # the measuring code: frame meter, statistics, capacity search, baseline
+│     └─ vitest.config.ts      # one project: unit (Node), for the measuring code in performance/
 └─ examples/
    ├─ vanilla/                 # Vite without a framework: createSnow() on a hero element
    └─ nextjs/                  # Next.js App Router: <Snowfall> from a client component
@@ -162,12 +169,13 @@ First setup: `nvm install` (reads `.nvmrc`); `npm install -g pnpm` if that Node 
 
 | Command | Does |
 |---|---|
-| `pnpm dev` | `turbo run dev`: the playground's dev server |
+| `pnpm dev` | `turbo run dev`: the dev servers of the playground and both examples |
+| `pnpm playground` | the playground's dev server alone; `pnpm playground --host` opens it to the local network, for a phone |
 | `pnpm build` | `turbo run build` |
 | `pnpm typecheck` | `turbo run typecheck` |
 | `pnpm lint` | `biome check --error-on-warnings .` |
 | `pnpm lint:fix` | `biome check --write .` |
-| `pnpm test` | `turbo run test --filter=./packages/*`: every library's full suite with coverage thresholds; builds first and needs Chromium |
+| `pnpm test` | `turbo run test --filter=./packages/* --filter=./apps/playground`: every library's full suite and the playground's unit tests, with coverage thresholds; builds first and needs Chromium |
 | `pnpm test:unit` | `turbo run test:unit`: the `unit` projects only, with no browser and no build |
 | `pnpm test:watch` | root `vitest` in watch mode across all projects except `dist` |
 | `pnpm test:ui` | the same with `--ui` |
@@ -239,7 +247,7 @@ type Snow = {
 | `color` | `string \| string[]` | `"#fff"` | One color, or a list from which each flake picks one at random. |
 | `shapes` | `Shape \| Array<Shape \| WeightedShape>` | `[dot]` | Shape variants, optionally weighted. |
 | `parallax` | `boolean` | `true` | Bigger flakes fall faster and are more opaque, which gives a sense of depth. |
-| `fps` | `number` | — | Frame-rate cap. Unset means the display refresh rate. The cap allows 10% slack, so 30 fps on a 60 Hz display draws every other frame. |
+| `fps` | `number` | `100` | Frame-rate cap. The cap allows 10% slack, so 30 fps on a 60 Hz display draws every other frame. The default draws every frame on displays up to 100 Hz and skips frames on faster ones: 60 fps at 120 Hz, 72 fps at 144 Hz. `Infinity` draws every frame. |
 | `maxDpr` | `number` | `2` | Upper limit on devicePixelRatio, to protect performance. |
 | `reducedMotion` | `"static" \| "reduce" \| "ignore"` | `"static"` | With `static`, the engine draws one frame and stops; it redraws that frame after a resize or `update()`, and `start()` doesn't animate it. With `reduce`, it keeps half the flakes at half the speed, with no rotation or gusts. Changes to the OS setting apply live. An unknown value falls back to `static`. |
 | `pauseWhenHidden` | `boolean` | `true` | Pauses on tab hidden (`visibilitychange`) and when the canvas is off-screen (`IntersectionObserver`). |
@@ -314,8 +322,8 @@ return <canvas ref={canvasRef} style={{ width: "100%", height: 300 }} />;
 - **Package metadata.** Each package has its own `README.md` and a copy of `LICENSE`, because npm packs only what's inside the package folder. `repository` (with `directory`), `homepage` and `bugs` point to the GitHub repo; npm rejects provenance when `repository.url` doesn't match the repo that publishes.
 - **Core also ships `dist/zimaleto.iife.js`** for `<script>` and CDN use (unpkg, jsDelivr), exposing `window.Zimaleto`. The `unpkg` and `jsdelivr` fields in `package.json` point to it. tsdown builds it from the same entry as a second config, minified and without `Symbol.toStringTag`, and size-limit measures the file as it is (`rolldown: false`).
 - **Size budgets** (size-limit, enforced in CI). A budget is never raised without the owner's approval.
-  - `@zimaleto/zima`, `import { createSnow }` (includes the default `dot`): ≤ 2.5 KB brotli (raised from 2 KB in M2, see §10). It measures 2.48 KB after the fixes from the post-M3 review.
-  - `@zimaleto/zima`, `<script>` build with every shape: ≤ 3 KB brotli. It measures 2.9 KB. M7 and M8 raise it with their new exports (§10).
+  - `@zimaleto/zima`, `import { createSnow }` (includes the default `dot`): ≤ 2.5 KB brotli (raised from 2 KB in M2, see §10). It measures 2.47 KB after M6.
+  - `@zimaleto/zima`, `<script>` build with every shape: ≤ 3 KB brotli. It measures 2.89 KB after M6. M7 and M8 raise it with their new exports (§10).
   - `@zimaleto/zima-react`, `import { Snowfall }` excluding core and React: ≤ 650 B brotli (raised from 500 B in M3, see §10)
 - **Versioning.** Changesets in **fixed** mode for the `@zimaleto/zima*` packages while on 0.x (the private playground stays out). One version for all packages is simpler for users.
 - **Publishing.** Four jobs at the end of the CI workflow on `main` release the packages. They're split so that no job holds both a token that writes to GitHub and the OIDC token that stages on npm, and only the stage job builds anything:
@@ -377,7 +385,7 @@ Tests live in a `__tests__/` folder in the module they test, one file per topic,
 
 | Pattern | Runs in | Used for |
 |---|---|---|
-| `__tests__/*.test.ts(x)` | Node (core) or happy-dom (react) | unit tests, the bulk of the suite |
+| `__tests__/*.test.ts(x)` | Node (core, playground) or happy-dom (react) | unit tests, the bulk of the suite |
 | `__tests__/*.browser.test.ts` | real Chromium via `@vitest/browser-playwright` | anything that needs a real canvas, observers or rAF |
 | `__tests__/*.ssr.test.tsx` | Node (`// @vitest-environment node`) | server rendering |
 | `__tests__/*.test-d.ts` | Vitest typecheck (`expectTypeOf`) | types of the public API |
@@ -430,7 +438,7 @@ Tests live in a `__tests__/` folder in the module they test, one file per topic,
   - Observers are disconnected.
   - Calling `destroy()` twice is safe, and other methods called after it do nothing.
   - After `destroy()`, a canvas target is cleared and its context is back at full opacity, and changes to reduced motion or the pixel ratio no longer draw on it.
-- **Frame timing:** with frames every 16 ms and `fps: 30`, every other frame draws. A low cap keeps the full fall speed, and a stalled frame moves the flakes by at most 50 ms.
+- **Frame timing:** with frames every 16 ms and `fps: 30`, every other frame draws. By default, 60 Hz and 100 Hz frames all draw and 120 Hz and 144 Hz frames every other one, while `fps: Infinity` draws every frame. A low cap keeps the full fall speed, and a stalled frame moves the flakes by at most 50 ms.
 - **`pauseWhenHidden`:** the loop pauses when the canvas scrolls off-screen; with `false` it keeps running.
 - **`reducedMotion`** (with `matchMedia` stubbed to `reduce`)
   - `"static"` draws exactly one frame, redraws it after a resize, and `start()` doesn't animate it.
@@ -441,7 +449,7 @@ Tests live in a `__tests__/` folder in the module they test, one file per topic,
 
 ### `@zimaleto/zima-react`: happy-dom + Testing Library
 
-Core is mocked with `vi.mock` (one shared mock in `__tests__/snowMock.ts`), except in the SSR test, which renders with the real core, and the re-export test. The mock keeps state (`isRunning`, `isDestroyed`), so tests check what a snowfall would do rather than count calls. Calls to `update()` are compared with `toStrictEqual`, because `toEqual` ignores keys set to `undefined`.
+Core is mocked with `vi.mock` (one shared mock in `__tests__/support/snowMock.ts`), except in the SSR test, which renders with the real core, and the re-export test. The mock keeps state (`isRunning`, `isDestroyed`), so tests check what a snowfall would do rather than count calls. Calls to `update()` are compared with `toStrictEqual`, because `toEqual` ignores keys set to `undefined`.
 
 - **Instance lifecycle**
   - `<Snowfall>` creates exactly one instance on mount and destroys it on unmount.
@@ -459,6 +467,16 @@ Core is mocked with `vi.mock` (one shared mock in `__tests__/snowMock.ts`), exce
 - **SSR:** `renderToString(<Snowfall />)` returns a `<canvas>` and never touches `window`. This lives in the `*.ssr.test.tsx` file.
 - **`isEqual`:** arrays and `{ shape, weight }` entries compare by content, functions by identity.
 
+### Playground: unit tests (Node)
+
+The playground's components are for trying things out by hand. The numbers of the performance baseline (§11) decide engine changes, though, so the measuring code in `src/performance/` has unit tests:
+
+- **Frame statistics:** the frame rate, the median and 95th-percentile intervals by nearest rank, a dropped frame, the snow's work per frame, and too few frames to measure.
+- **Frame meter** (a stubbed `requestAnimationFrame` and clock): it reads only the frames of the window, times the page's frame callbacks, keeps a bounded history, and puts `requestAnimationFrame` back.
+- **Measurements** (fake timers): a reading comes after the settle time and the window, and an abort rejects with its reason, also one that came first.
+- **Capacity search** (a simulated device): it measures the display's rate without flakes, finds the capacity to within 10% or 25 flakes, stops at its ceiling, and counts a frame rate under 95% of the display's as dropping.
+- **Baseline:** the capacity at pixel ratios 1 and 2, then 150, 1,000 and 5,000 flakes at ratio 2.
+
 ### Build checks (`*.dist.test.ts`)
 
 - **Core:** running `dist/zimaleto.iife.js` in a bare `node:vm` context doesn't touch the DOM, and it puts `createSnow` and every shape on `Zimaleto`.
@@ -474,7 +492,7 @@ Core is mocked with `vi.mock` (one shared mock in `__tests__/snowMock.ts`), exce
 ### Coverage
 
 - Provider is `@vitest/coverage-v8`, which also works in Chromium browser mode. Reporters: `text` and `lcov`. Only `src/` counts, so the `dist` tests don't skew it.
-- Thresholds are checked by each package's `test` task. It runs all of the package's projects in one Vitest run, so the engine (covered by browser tests) and the physics (covered by unit tests) count together. Both packages are held at 100% statements, branches, functions and lines.
+- Thresholds are checked by each package's `test` task. It runs all of the package's projects in one Vitest run, so the engine (covered by browser tests) and the physics (covered by unit tests) count together. Both packages and the playground's `src/performance/` are held at 100% statements, branches, functions and lines.
 
 ### CI
 
@@ -494,7 +512,7 @@ A composite action, `.github/actions/setup`, installs pnpm, Node from `.nvmrc` a
 - A milestone is done only when its features are covered by tests and CI is green.
 - A bug fix starts with a failing test that reproduces the bug.
 - Tests never depend on wall-clock time or `Math.random`. They use `seed` and the injectable clock (§5).
-- The playground is for manual tuning only. It doesn't replace tests.
+- The playground is for manual tuning and measuring. It doesn't replace the libraries' tests.
 
 ### Confirmed in M0
 
@@ -527,7 +545,7 @@ A composite action, `.github/actions/setup`, installs pnpm, Node from `.nvmrc` a
   - Next.js needs default exports in `page.tsx` and `layout.tsx`, so CLAUDE.md's named-export rule and the Biome override widen to cover them.
   - The READMEs cover the notes from §6: a canvas needs a CSS size, `text()` and `image()` belong in client components, and apps mock the package in jsdom tests.
 - **M5 · Release 0.1.0.** The `release` job with staged publishing, the release app and the `npm` environment, placeholder packages and trusted publishing (§7), and the first changeset release, `0.1.0`. The npm org already exists. Released on 2026-11-11.
-- **M6 · Performance baseline.** A performance panel, a stress preset and a capacity ramp in the playground; baseline numbers on the owner's devices; and only the engine changes those numbers justify (§11). No new public API.
+- **M6 · Performance baseline.** A Performance section in the playground with live frame statistics, a stress test and a baseline run; baseline numbers on the owner's devices (§11). The numbers justified one engine change: `fps` defaults to 100, so 120 Hz and faster displays skip frames (§10). No new public API.
 - **M7 · More snowflakes.** `dendrite`, `plate`, `needle`, `bokeh`, `sparkle` and the `crystals()` generator in the core, a shape gallery in the playground, and a larger budget for the script build (§11).
 - **M8 · Snow drifts.** The `ground` option and `drift()`: flakes that reach the bottom settle into a layer of snow that builds up (§11).
 - **Later.**
@@ -580,6 +598,8 @@ Decided on 2026-11-07 unless a row gives another date.
 | Shapes home (2026-11-11) | New shapes are named exports of `@zimaleto/zima`, not a separate package or a subpath. Tree-shaking keeps `createSnow` unchanged however many there are, and fixed versioning would release a separate package in lockstep anyway. The React wrapper's re-export lets Server Components pass them as props, and `crystals()` reuses the core's RNG. |
 | Script build budget (2026-11-11) | The `<script>` build keeps every export in one file. Its budget rises in M7 and M8 to the measured size plus a small margin, about 3.6 KB and 4.2 KB, and each PR states the exact number. |
 | Core budget for drifts (2026-11-11) | The drift's hook in the engine may take `import { createSnow }` up to 2.6 KB, after first trying to win the bytes back elsewhere in the engine. The drift itself counts only where it's imported. |
+| Default frame rate (2026-11-15) | `fps` defaults to 100 instead of no cap. With the 10% slack, displays up to 110 Hz draw every frame and faster ones skip frames: 60 fps at 120 Hz, 72 fps at 144 Hz. On the MacBook's 120 Hz display, Chrome spent 16% of a core on the default snow at 120 fps and 10% at 60 fps. `Infinity` draws every frame. A default of 60 was rejected: the cap would give 48 fps at 144 Hz, 45 at 90 Hz and 37.5 at 75 Hz. |
+| Playground tests (2026-11-14) | The playground's measuring code (`src/performance/`) has Node unit tests held at 100% coverage, because the baseline's numbers decide engine changes. Its components stay without tests. `pnpm test` runs them with the libraries' suites. |
 
 ---
 
@@ -591,21 +611,39 @@ Three milestones make the snow itself richer: measure first, then add new flakes
 
 Numbers come before optimizations, so that M7 and M8 keep the snow cheap.
 
-- **Playground.**
-  - A Performance panel shows frames per second, the 95th-percentile frame interval and the flake count.
-  - A stress preset fills the viewport with up to 5,000 flakes of every shape.
-  - A ramp mode adds flakes until frames start to drop, and reports that count as the device's capacity.
-- **Baseline.**
-  - Devices: the owner's Mac (Chrome, Safari, Firefox) and an Android phone (Chrome).
-  - Measures: the capacity at pixel ratio 1 and 2; the frame interval at 150, 1,000 and 5,000 flakes; and the tab's CPU use at the default settings, from the browser's task manager.
-  - The numbers go into a table in this section, together with the steps, so later milestones can repeat them.
-- **Candidates.** Each one stays only if the numbers show a gain and it fits the budget.
-  - **High-refresh screens.** Without `fps`, a 120 Hz screen draws twice as many frames as a 60 Hz one for the same slow snow. A default cap would halve that work. But the current cap logic turns a 60 fps cap into every third frame at 144 Hz (48 fps) and every other frame at 90 Hz (45 fps), so the cap may need to follow the measured refresh rate. It changes a documented default, so the owner decides.
-  - **Large canvases.** A 5K screen at pixel ratio 2 clears and composites about 15 megapixels a frame. Lowering the ratio for canvases that large may save more than any change to the flake loop.
-  - **Downscaled sprites.** A sprite is drawn at the largest flake size and scaled down for the rest. Below half size, bilinear filtering shimmers on the detailed shapes that M7 adds. Compare `imageSmoothingQuality` with sprites rendered at a few sizes.
-  - **The flake loop.** Skip rotation for flakes that don't spin, change `globalAlpha` less often, and order flakes by sprite when they're rolled, so consecutive draws share a texture. GPU canvases often gain little from these, so each one needs numbers.
-- **Not in M6.** A worker renderer and WebGL stay in the backlog. The capacity numbers show whether they would ever pay off.
-- **Release.** Changes to the playground alone need no changeset. An engine change gets a `perf(zima)` changeset.
+- **Playground.** A Performance section at the top of the panel:
+  - live statistics for the last two seconds: the frame rate, the median and 95th-percentile frame intervals, the snow's main-thread work per frame, the flake count and the canvas size. The work comes from timing the page's `requestAnimationFrame` callbacks, which the meter wraps while it runs;
+  - **Stress test**: the page overlay with 5,000 flakes of every shape in two colors;
+  - **Run baseline**: the measurements below, in about a minute.
+- **What the baseline measures.**
+  - It runs on the stress test, drawing every display frame (`fps: Infinity`) and animating even when the OS asks for reduced motion.
+  - **Capacity** is the most flakes that keep 95% of the display's frame rate, which it measures without flakes first. The count doubles from 250 until frames drop, then bisects to within 10%, up to 64,000. Each step settles for 0.5 s and measures for 1.5 s.
+  - It finds the capacity at pixel ratios 1 and 2, then measures 150, 1,000 and 5,000 flakes at ratio 2 for 3 s each.
+  - A hidden tab or paused snow stops it.
+- **Steps**, so that later milestones can repeat them:
+  1. Quit heavy background work: a busy machine drops frames early.
+  2. Open the playground in a maximized window: the demo, or `pnpm playground`. A phone on the same network can open `pnpm playground --host`.
+  3. Press **Run baseline**, keep the tab in front, and note the table it shows.
+  4. For the CPU use: reload, choose **Over the whole page**, wait 10 seconds, and read the tab's CPU in the browser's task manager. In Chrome that's the renderer and the GPU process.
+- **Results** on a MacBook Pro with an M4 Max (2026-11-14):
+
+  | Browser and display | Capacity at ratio 1 / 2 | Work per frame at 150 / 1,000 / 5,000 flakes | CPU at the defaults: tab + GPU |
+  |---|---|---|---|
+  | Chrome 157, 5K display at 60 Hz (13.1 MP canvas) | 18,000 / 18,000 | 0.2 / 1.1 / 1.9 ms, all at 60 fps | 5.4% + 6.9% |
+  | Chrome 157, built-in display at 120 Hz (6.7 MP) | 8,500 / 8,500–9,000 | 0.3 / 0.6 / 1.9 ms, all at 120 fps | 6.8% + 9.2% at 120 fps; 4.6% + 5.7% with the new default |
+  | Safari 27.2, Firefox 160 | to be measured by the owner | | |
+  | Android phone, Chrome | to be measured by the owner | | — (no task manager) |
+
+- **Findings.**
+  - On the Mac, the main thread limits the capacity: the pixel ratio changes neither the capacity nor the CPU use. Above about 8,500 flakes a frame, the work per flake roughly triples, from about 0.37 µs to 1 µs, likely because Chrome flushes the canvas's recorded commands in the middle of the frame.
+  - At the default 150 flakes, most of the CPU goes to presenting a changed canvas every frame: an animated canvas without flakes costs 80% as much. The frame rate is the lever, not the flake loop.
+- **Candidates.**
+  - **High-refresh screens: done.** `fps` defaults to 100 (§10). On the 120 Hz display that cut the default snow from 16% to 10% of a core.
+  - **Large canvases: dropped.** Pixel ratio 1 and 2 gave the same capacity and CPU use, even on the 13-megapixel canvas of the 5K display.
+  - **Downscaled sprites: moved to M7.** Chrome samples a shrinking sprite with mipmaps: `low`, `medium` and `high` smoothing look the same down to an eighth of the sprite's size. M7 checks Safari and Firefox with its detailed shapes.
+  - **The flake loop: dropped.** Sorting flakes by sprite, setting `globalAlpha` once and drawing without rotation each stayed within the noise of the capacity, about 10%.
+- **Not in M6.** A worker renderer and WebGL stay in the backlog. The main thread limits the capacity at more than 8,000 flakes a frame, well beyond what a page needs.
+- **Release.** A `patch` changeset for the default frame rate.
 
 ### M7 · More snowflakes
 
@@ -646,7 +684,7 @@ createSnow({ size: [4, 12], shapes: [...crystals(8), { shape: dendrite, weight: 
   - Everything stays within 1.25 radii (the sprite contract, §5).
   - Detail needs room: at the default `size` of 2–5 px, detailed shapes read as dots, so the README and the playground suggest a size for each.
   - A shared internal helper draws the six rotated copies, wherever that saves bytes.
-- **Size.** `import { createSnow }` stays at 2.48 KB. The script build grows by about 0.6 KB, and its budget rises to the measured size plus a small margin, about 3.6 KB (§10).
+- **Size.** `import { createSnow }` stays at 2.47 KB. The script build grows by about 0.6 KB, and its budget rises to the measured size plus a small margin, about 3.6 KB (§10).
 - **Playground.**
   - The Shapes panel gets the new shapes and a crystal count.
   - A gallery draws each shape large.
