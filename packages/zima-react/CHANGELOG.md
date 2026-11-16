@@ -1,5 +1,12 @@
 # @zimaleto/zima-react
 
+## 0.1.1
+
+### Patch Changes
+
+- Updated dependencies [[`d970371`](https://github.com/alexeikaratai/zimaleto/commit/d970371d33c3ec29462c412dbf6d1ec87d3c54cf)]:
+  - @zimaleto/zima@0.1.1
+
 ## 0.1.0
 
 ### Minor Changes
