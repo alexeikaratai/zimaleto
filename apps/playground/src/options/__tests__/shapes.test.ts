@@ -1,12 +1,12 @@
-import { crystals, dot, sparkle } from "@zimaleto/zima-react";
+import { bokeh, crystals, dot } from "@zimaleto/zima-react";
 import { describe, expect, test } from "vitest";
 import { INITIAL_SHAPE_WEIGHTS, labelShapes, SHAPE_NAMES, toShapes } from "../shapes";
 
 describe("toShapes", () => {
     test("leaves out shapes with a weight of 0", () => {
-        const shapes = toShapes({ ...INITIAL_SHAPE_WEIGHTS, dot: 0, sparkle: 2 }, 8);
+        const shapes = toShapes({ ...INITIAL_SHAPE_WEIGHTS, dot: 0, bokeh: 2 }, 8);
 
-        expect(shapes).toStrictEqual([{ shape: sparkle, weight: 2 }]);
+        expect(shapes).toStrictEqual([{ shape: bokeh, weight: 2 }]);
     });
 
     test("gives nothing when every weight is 0, so the core falls back to dots", () => {

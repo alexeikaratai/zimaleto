@@ -17,11 +17,8 @@ export const DETAILED_OPTIONS: PlaygroundOptions = {
     shapeWeights: {
         ...INITIAL_SHAPE_WEIGHTS,
         dot: 0,
-        dendrite: 2,
-        plate: 1,
-        needle: 1,
+        dendrite: 1,
         bokeh: 1,
-        sparkle: 1,
         crystals: 3,
     },
     count: 80,

@@ -5,27 +5,13 @@ import {
     dendrite,
     dot,
     image,
-    needle,
-    plate,
     type Shape,
-    sparkle,
     star,
     text,
     type WeightedShape,
 } from "@zimaleto/zima-react";
 
-export type ShapeName =
-    | "dot"
-    | "star"
-    | "crystal"
-    | "dendrite"
-    | "plate"
-    | "needle"
-    | "bokeh"
-    | "sparkle"
-    | "crystals"
-    | "glyph"
-    | "picture";
+export type ShapeName = "dot" | "star" | "crystal" | "dendrite" | "bokeh" | "crystals" | "glyph" | "picture";
 
 /** How common each shape is. A weight of 0 leaves the shape out. */
 export type ShapeWeights = Record<ShapeName, number>;
@@ -46,10 +32,7 @@ const SINGLE_SHAPES: Record<Exclude<ShapeName, "crystals">, Shape> = {
     star,
     crystal,
     dendrite,
-    plate,
-    needle,
     bokeh,
-    sparkle,
     glyph: text("❄"),
     picture: image(PICTURE_SOURCE),
 };
@@ -59,10 +42,7 @@ export const SHAPE_LABELS: Record<ShapeName, string> = {
     star: "Star",
     crystal: "Crystal",
     dendrite: "Dendrite",
-    plate: "Plate",
-    needle: "Needle",
     bokeh: "Bokeh",
-    sparkle: "Sparkle",
     crystals: "Generated crystals",
     glyph: "❄ as text",
     picture: "Picture",
@@ -75,10 +55,7 @@ export const INITIAL_SHAPE_WEIGHTS: ShapeWeights = {
     star: 0,
     crystal: 0,
     dendrite: 0,
-    plate: 0,
-    needle: 0,
     bokeh: 0,
-    sparkle: 0,
     crystals: 0,
     glyph: 0,
     picture: 0,
