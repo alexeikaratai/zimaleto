@@ -60,7 +60,7 @@ The canvas needs a CSS size. The ref has to hold the element when the component 
 
 ## Next.js and Server Components
 
-The package is marked `"use client"`, so a Server Component can render `<Snowfall>` and pass it the built-in shapes, such as `dendrite` or `sparkle`. `crystals()`, `text()`, `image()` and custom shapes are functions that run in the browser: create them in a client component, as the [Next.js example](https://github.com/alexeikaratai/zimaleto/tree/main/examples/nextjs) does.
+The package is marked `"use client"`, so a Server Component can render `<Snowfall>` and pass it the built-in shapes, such as `dendrite` or `bokeh`. `crystals()`, `text()`, `image()` and custom shapes are functions that run in the browser: create them in a client component, as the [Next.js example](https://github.com/alexeikaratai/zimaleto/tree/main/examples/nextjs) does.
 
 ## Testing your app
 
