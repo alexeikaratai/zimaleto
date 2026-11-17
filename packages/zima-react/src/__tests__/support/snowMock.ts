@@ -55,7 +55,7 @@ export const core: CoreMock = {
 };
 
 /** A shape that draws nothing; with the core mocked, only its identity matters. */
-export const sparkle: Shape = () => undefined;
+export const blankShape: Shape = () => undefined;
 
 /** The one snowfall that hasn't been destroyed, as StrictMode leaves it after mounting twice. */
 export function liveSnow(): SnowMock | undefined {

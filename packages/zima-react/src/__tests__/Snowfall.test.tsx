@@ -2,7 +2,7 @@ import { cleanup, render } from "@testing-library/react";
 import { createRef, StrictMode } from "react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { Snowfall } from "../Snowfall";
-import { core, liveSnow, sparkle } from "./support/snowMock";
+import { blankShape, core, liveSnow } from "./support/snowMock";
 
 vi.mock("@zimaleto/zima", async () => {
     const { core: mockedCore } = await import("./support/snowMock");
@@ -105,14 +105,14 @@ describe("<Snowfall> prop changes", () => {
         const { rerender } = render(
             <Snowfall
                 color={["#fff", "#cfe8ff"]}
-                shapes={[sparkle, { shape: sparkle, weight: 2 }]}
+                shapes={[blankShape, { shape: blankShape, weight: 2 }]}
             />,
         );
 
         rerender(
             <Snowfall
                 color={["#fff", "#cfe8ff"]}
-                shapes={[sparkle, { shape: sparkle, weight: 2 }]}
+                shapes={[blankShape, { shape: blankShape, weight: 2 }]}
             />,
         );
 
@@ -120,11 +120,11 @@ describe("<Snowfall> prop changes", () => {
     });
 
     test("calls update() when a weight inside shapes changes", () => {
-        const { rerender } = render(<Snowfall shapes={[{ shape: sparkle, weight: 1 }]} />);
+        const { rerender } = render(<Snowfall shapes={[{ shape: blankShape, weight: 1 }]} />);
 
-        rerender(<Snowfall shapes={[{ shape: sparkle, weight: 2 }]} />);
+        rerender(<Snowfall shapes={[{ shape: blankShape, weight: 2 }]} />);
 
-        expect(core.instances[0]?.update.mock.calls).toStrictEqual([[{ shapes: [{ shape: sparkle, weight: 2 }] }]]);
+        expect(core.instances[0]?.update.mock.calls).toStrictEqual([[{ shapes: [{ shape: blankShape, weight: 2 }] }]]);
     });
 
     test("sends a removed prop as undefined, so the core restores its default", () => {
