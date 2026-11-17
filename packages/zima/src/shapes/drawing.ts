@@ -26,6 +26,25 @@ export function traceStar(context: CanvasRenderingContext2D, points: number, out
     });
 }
 
+/**
+ * Adds a tapering bar along the x-axis to the path, from (0, 0) to `length`: `halfWidth` either side of the axis at
+ * its base, narrowing to `tipShare` of that at its end.
+ */
+export function traceTaper(
+    context: CanvasRenderingContext2D,
+    length: number,
+    halfWidth: number,
+    tipShare: number,
+): void {
+    const tipHalfWidth = halfWidth * tipShare;
+
+    context.moveTo(0, -halfWidth);
+    context.lineTo(length, -tipHalfWidth);
+    context.lineTo(length, tipHalfWidth);
+    context.lineTo(0, halfWidth);
+    context.closePath();
+}
+
 /** Round strokes as wide as a share of the radius, and at least a pixel, so thin lines don't fade in small sprites. */
 export function styleStroke(context: CanvasRenderingContext2D, radius: number, share: number): void {
     context.lineWidth = Math.max(1, radius * share);

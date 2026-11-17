@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { drawAround, styleStroke, traceHexagon, traceStar } from "../drawing";
+import { drawAround, styleStroke, traceHexagon, traceStar, traceTaper } from "../drawing";
 
 const SIZE = 100;
 const RADIUS = 40;
@@ -85,6 +85,31 @@ describe("traceStar", () => {
             isInside(context, distance * Math.SQRT1_2 * RADIUS, -distance * Math.SQRT1_2 * RADIUS);
 
         expect([corner(0.15), corner(0.25)]).toStrictEqual([true, false]);
+    });
+});
+
+describe("traceTaper", () => {
+    test("is as wide as asked at its base", () => {
+        const context = createContext();
+
+        traceTaper(context, RADIUS, 4, 0.25);
+
+        const isInsideBase = isInside(context, 1, 3.5);
+        const isOutsideBase = isInside(context, 1, 4.5);
+
+        expect([isInsideBase, isOutsideBase]).toStrictEqual([true, false]);
+    });
+
+    test("narrows to its tip share at the end", () => {
+        const context = createContext();
+
+        traceTaper(context, RADIUS, 4, 0.25);
+
+        // A quarter of a half width of 4 px leaves 1 px either side of the axis at the end.
+        const isInsideTip = isInside(context, RADIUS - 1, 0.5);
+        const isOutsideTip = isInside(context, RADIUS - 1, 1.5);
+
+        expect([isInsideTip, isOutsideTip]).toStrictEqual([true, false]);
     });
 });
 

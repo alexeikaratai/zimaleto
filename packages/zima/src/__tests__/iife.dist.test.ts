@@ -31,9 +31,6 @@ describe("<script> build", () => {
             "dendrite",
             "dot",
             "image",
-            "needle",
-            "plate",
-            "sparkle",
             "star",
             "text",
         ]);

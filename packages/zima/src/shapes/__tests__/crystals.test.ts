@@ -56,14 +56,13 @@ describe("designStellar", () => {
         expect(second).toStrictEqual(first);
     });
 
-    // A center or tips of size 0 mean none, so only the sizes above 0 count.
+    // A ring of size 0 means none, so only the sizes above 0 count.
     test.each<[field: keyof StellarDesign, min: number, max: number]>([
-        ["armWidth", 0.05, 0.1],
-        ["branchPairs", 1, 4],
-        ["branchStart", 0.2, 0.5],
-        ["branchLength", 0.15, 0.4],
-        ["centerSize", 0.12, 0.25],
-        ["tipSize", 0.08, 0.16],
+        ["armWidth", 0.06, 0.1],
+        ["branchPairs", 2, 4],
+        ["branchStart", 0.25, 0.45],
+        ["branchLength", 0.25, 0.45],
+        ["ringSize", 0.15, 0.3],
     ])("keeps %s within %s to %s", (field, min, max) => {
         const values = designMany(200)
             .map((design) => design[field])
@@ -73,15 +72,13 @@ describe("designStellar", () => {
         expect(Math.max(...values)).toBeLessThanOrEqual(max);
     });
 
-    test("varies the branch pairs, the center and the tips", () => {
+    test("varies the branch pairs and the ring", () => {
         const designs = designMany(200);
 
         const branchPairs = new Set(designs.map((design) => design.branchPairs));
-        const centers = new Set(designs.map((design) => design.centerSize > 0));
-        const tips = new Set(designs.map((design) => design.tipSize > 0));
+        const rings = new Set(designs.map((design) => design.ringSize > 0));
 
-        expect([...branchPairs].sort()).toStrictEqual([1, 2, 3, 4]);
-        expect(centers.size).toBe(2);
-        expect(tips.size).toBe(2);
+        expect([...branchPairs].sort()).toStrictEqual([2, 3, 4]);
+        expect(rings.size).toBe(2);
     });
 });

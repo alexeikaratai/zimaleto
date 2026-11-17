@@ -83,12 +83,9 @@ createSnow({
 | `dot` | a filled circle, the default | any size |
 | `star` | a five-pointed star | 3 px |
 | `crystal` | six arms with two branches each | 4 px |
-| `dendrite` | the classic fern-like snowflake: six arms with rows of side branches that shorten towards the tip | 6 px |
-| `plate` | a hexagonal ice plate with ridges from the center to the corners | 5 px |
-| `needle` | a thin ice column that twirls as it falls | 4 px |
+| `dendrite` | the classic fern-like snowflake: six tapering arms with rows of side branches that shorten towards the tip | 6 px |
 | `bokeh` | an out-of-focus flake, which adds depth when mixed with sharp ones | any size |
-| `sparkle` | a four-pointed glint | 3 px |
-| `crystals(count, seed?)` | `count` different stellar crystals, from 1 to 32 | 6 px |
+| `crystals(count, seed?)` | `count` different stellar crystals, from 1 to 32: tapering arms with two to four pairs of side branches, some with a hexagonal ring around the center | 6 px |
 | `text(glyph, font?)` | a character or an emoji | depends on the glyph |
 | `image(src)` | a picture in its own colors | depends on the picture |
 

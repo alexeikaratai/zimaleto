@@ -2,12 +2,11 @@ import type { Shape } from "./shape";
 import { drawStellar, type StellarDesign } from "./stellar";
 
 const DENDRITE: StellarDesign = {
-    armWidth: 0.06,
+    armWidth: 0.08,
     branchPairs: 4,
-    branchStart: 0.3,
-    branchLength: 0.35,
-    centerSize: 0,
-    tipSize: 0,
+    branchStart: 0.25,
+    branchLength: 0.42,
+    ringSize: 0,
 };
 
 /** The classic fern-like snowflake: six arms with rows of side branches that shorten towards the tip. */

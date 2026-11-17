@@ -8,10 +8,7 @@ import { crystals } from "../crystals";
 import { dendrite } from "../dendrite";
 import { dot } from "../dot";
 import { image } from "../image";
-import { needle } from "../needle";
-import { plate } from "../plate";
 import type { Shape } from "../shape";
-import { sparkle } from "../sparkle";
 import { star } from "../star";
 import { text } from "../text";
 
@@ -36,10 +33,7 @@ describe("built-in shapes", () => {
         ["star", star],
         ["crystal", crystal],
         ["dendrite", dendrite],
-        ["plate", plate],
-        ["needle", needle],
         ["bokeh", bokeh],
-        ["sparkle", sparkle],
         ["crystals", crystals(1)[0] as Shape],
         ["text", text("❄")],
     ])("%s draws visible flakes", (_name, shape) => {

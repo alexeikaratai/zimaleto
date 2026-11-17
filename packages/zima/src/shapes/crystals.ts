@@ -4,34 +4,33 @@ import { drawStellar, type StellarDesign } from "./stellar";
 
 // Each crystal is one more sprite per color, so the count stays small.
 const MAX_COUNT = 32;
-const MAX_BRANCH_PAIRS = 4;
+// A single pair looks sparse, and five crowd the arm.
+const MIN_BRANCH_PAIRS = 2;
+const BRANCH_PAIR_CHOICES = 3;
 
 const crystalSets = new Map<string, readonly Shape[]>();
 
 /** Rolls a crystal's design. Every design reads as a real crystal, because the drawing keeps it symmetric. */
 export function designStellar(random: Random): StellarDesign {
-    const armWidth = between([0.05, 0.1], random());
-    const branchPairs = 1 + Math.floor(random() * MAX_BRANCH_PAIRS);
-    const branchStart = between([0.2, 0.5], random());
-    const branchLength = between([0.15, 0.4], random());
-    const hasCenter = random() < 0.5;
-    const centerSize = between([0.12, 0.25], random());
-    const hasTips = random() < 0.5;
-    const tipSize = between([0.08, 0.16], random());
+    const armWidth = between([0.06, 0.1], random());
+    const branchPairs = MIN_BRANCH_PAIRS + Math.floor(random() * BRANCH_PAIR_CHOICES);
+    const branchStart = between([0.25, 0.45], random());
+    const branchLength = between([0.25, 0.45], random());
+    const hasRing = random() < 0.5;
+    const ringSize = between([0.15, 0.3], random());
 
     return {
         armWidth,
         branchPairs,
         branchStart,
         branchLength,
-        centerSize: hasCenter ? centerSize : 0,
-        tipSize: hasTips ? tipSize : 0,
+        ringSize: hasRing ? ringSize : 0,
     };
 }
 
 /**
- * Different stellar crystals: six arms with mirror-symmetric side branches, and some with a hexagon at the center or
- * plates at the tips. The same arguments always return the same array of the same shapes, so calling it inline
+ * Different stellar crystals: six tapering arms with mirror-symmetric side branches, and some with a hexagonal ring
+ * around the center. The same arguments always return the same array of the same shapes, so calling it inline
  * doesn't rebuild sprites, and the designs are the same on every page load.
  *
  * @example
