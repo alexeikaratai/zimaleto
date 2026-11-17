@@ -1,6 +1,5 @@
 import type { ReactElement, RefObject } from "react";
 import { type PlaygroundOptions, type TargetMode, toSnowOptions } from "../options/playgroundOptions";
-import { toShapes } from "../options/shapes";
 import { CanvasSnow } from "./CanvasSnow";
 import { ContainerSnow } from "./ContainerSnow";
 import { PageSnow } from "./PageSnow";
@@ -29,7 +28,7 @@ const VIEWS: Record<TargetMode, (props: SnowViewProps) => ReactElement> = {
 export function SnowStage({ mode, options, isPaused, canvasRef }: SnowStageProps): ReactElement {
     const View = VIEWS[mode];
     // The wrapper compares options by value, so rebuilding the shapes list on every render is fine.
-    const snowOptions = toSnowOptions(options, toShapes(options.shapeWeights));
+    const snowOptions = toSnowOptions(options);
 
     return (
         <main className="stage">
