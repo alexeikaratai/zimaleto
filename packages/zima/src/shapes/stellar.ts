@@ -58,7 +58,8 @@ export function drawStellar(context: CanvasRenderingContext2D, radius: number, d
     });
 
     if (ringSize > 0) {
-        context.lineWidth = armHalfWidth;
+        // Half as wide as an arm, and at least a pixel, so the ring doesn't fade in small sprites.
+        context.lineWidth = Math.max(1, armHalfWidth);
         context.beginPath();
         traceHexagon(context, ringSize * radius);
         context.stroke();

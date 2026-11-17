@@ -37,11 +37,12 @@ export function designStellar(random: Random): StellarDesign {
  * createSnow({ size: [4, 12], shapes: [...crystals(8), dot] });
  *
  * @param count - How many crystals, rounded and kept within 1–32. Each one is a sprite per color.
- * @param seed - Picks other designs. It's independent of the snow's `seed` option.
+ * @param seed - Picks other designs; only its whole part counts. It's independent of the snow's `seed` option.
  */
 export function crystals(count: number, seed = 0): readonly Shape[] {
     const length = Math.min(MAX_COUNT, Math.max(1, Math.round(count) || 1));
-    const key = `${length} ${seed}`;
+    // The generator keeps only the seed's whole part, so seeds that give the same designs share an array.
+    const key = `${length} ${seed >>> 0}`;
     const cached = crystalSets.get(key);
 
     if (cached) {

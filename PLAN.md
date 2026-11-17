@@ -326,7 +326,7 @@ return <canvas ref={canvasRef} style={{ width: "100%", height: 300 }} />;
 - **Core also ships `dist/zimaleto.iife.js`** for `<script>` and CDN use (unpkg, jsDelivr), exposing `window.Zimaleto`. The `unpkg` and `jsdelivr` fields in `package.json` point to it. tsdown builds it from the same entry as a second config, minified and without `Symbol.toStringTag`, and size-limit measures the file as it is (`rolldown: false`).
 - **Size budgets** (size-limit, enforced in CI). A budget is never raised without the owner's approval.
   - `@zimaleto/zima`, `import { createSnow }` (includes the default `dot`): ≤ 2.5 KB brotli (raised from 2 KB in M2, see §10). It measures 2.47 KB after M7, unchanged by the new shapes.
-  - `@zimaleto/zima`, `<script>` build with every shape: ≤ 3.5 KB brotli (raised from 3 KB in M7, see §10). It measures 3,378 B after M7. M8 raises it again for `drift()`.
+  - `@zimaleto/zima`, `<script>` build with every shape: ≤ 3.5 KB brotli (raised from 3 KB in M7, see §10). It measures 3,395 B after M7. M8 raises it again for `drift()`.
   - `@zimaleto/zima-react`, `import { Snowfall }` excluding core and React: ≤ 650 B brotli (raised from 500 B in M3, see §10)
 - **Versioning.** Changesets in **fixed** mode for the `@zimaleto/zima*` packages while on 0.x (the private playground stays out). One version for all packages is simpler for users.
 - **Publishing.** Four jobs at the end of the CI workflow on `main` release the packages. They're split so that no job holds both a token that writes to GitHub and the OIDC token that stages on npm, and only the stage job builds anything:
@@ -422,7 +422,7 @@ Tests live in a `__tests__/` folder in the module they test, one file per topic,
   - The same `seed` gives an identical sequence.
   - Values fall in [0, 1).
 - **Shapes:** with a fixed seed, weighted selection follows the weights.
-- **`crystals()`:** it returns `count` shapes, the same array for the same arguments and other shapes for another seed, and a count outside 1–32 or not whole is rounded and clamped. Its designs are the same for the same seed, stay within their ranges, and vary the branch pairs and the ring around the center.
+- **`crystals()`:** it returns `count` shapes, the same array for the same arguments and other shapes for another seed, and a count outside 1–32 or not whole is rounded and clamped. Seeds with the same whole part share an array. Its designs are the same for the same seed, differ for another one, stay within their ranges, and vary the branch pairs and the ring around the center.
 - **Entry:** importing `src/index.ts` in Node, with no `window` or `document`, doesn't throw.
 
 ### `@zimaleto/zima`: browser tests (Chromium)
@@ -454,7 +454,7 @@ Tests live in a `__tests__/` folder in the module they test, one file per topic,
   - Every built-in shape, and each of `crystals(32)`, draws inside 1.25 radii, so the sprite's border stays transparent.
   - Each built-in shape covers its expected share of its circle, worked out from the geometry where it's simple, and the generated crystals are neither wisps nor blobs.
   - Every shape but the star matches itself turned by 180° and mirrored across the horizontal axis, within 2% for anti-aliasing.
-  - `bokeh` is opaque at the center and fades towards the edge. A stellar crystal narrows its arms towards the tip and draws a ring around the center only when its design has one.
+  - `bokeh` is opaque at the center, fades towards the edge, and keeps its halo when a custom shape draws over it. A stellar crystal narrows its arms towards the tip, draws a ring around the center only when its design has one, and keeps the ring at least a pixel wide.
   - The crystals of a set all differ, a larger set starts with the crystals of a smaller one, and another seed draws other crystals.
   - The shared helpers turn copies evenly and leave the context as it was, put hexagon corners, star tips and the ends of a tapering bar where expected, and keep lines at least a pixel wide.
 
@@ -487,7 +487,7 @@ The playground's components are for trying things out by hand. The numbers of th
 - **Measurements** (fake timers): a reading comes after the settle time and the window, and an abort rejects with its reason, also one that came first.
 - **Capacity search** (a simulated device): it measures the display's rate without flakes, finds the capacity to within 10% or 25 flakes, stops at its ceiling, and counts a frame rate under 95% of the display's as dropping.
 - **Baseline:** the capacity at pixel ratios 1 and 2, then 150, 1,000 and 5,000 flakes at ratio 2.
-- **Options:** shapes with a weight of 0 are left out, the generated crystals share their weight, the gallery labels every shape once, the playground's own fields stay out of the snow options, and the stress test weighs every shape.
+- **Options:** shapes with a weight of 0 are left out, the generated crystals share their weight, the gallery labels every shape once, and the playground's own fields stay out of the snow options.
 
 ### Build checks (`*.dist.test.ts`)
 
@@ -559,7 +559,7 @@ A composite action, `.github/actions/setup`, installs pnpm, Node from `.nvmrc` a
   - The READMEs cover the notes from §6: a canvas needs a CSS size, `text()` and `image()` belong in client components, and apps mock the package in jsdom tests.
 - **M5 · Release 0.1.0.** The `release` job with staged publishing, the release app and the `npm` environment, placeholder packages and trusted publishing (§7), and the first changeset release, `0.1.0`. The npm org already exists. Released on 2026-11-11.
 - **M6 · Performance baseline.** A Performance section in the playground with live frame statistics, a stress test and a baseline run; baseline numbers on the owner's devices (§11). The numbers justified one engine change: `fps` defaults to 100, so 120 Hz and faster displays skip frames (§10). No new public API.
-- **M7 · More snowflakes.** `dendrite`, `bokeh` and the `crystals()` generator in the core, a shape gallery and a preset for the detailed shapes in the playground, and a larger budget for the script build: it measures 3,378 B, under a budget of 3.5 KB (§11). After a first draft the owner dropped `plate`, `needle` and `sparkle` (§10). `import { createSnow }` doesn't grow.
+- **M7 · More snowflakes.** `dendrite`, `bokeh` and the `crystals()` generator in the core, a shape gallery and a preset for the detailed shapes in the playground, and a larger budget for the script build: it measures 3,395 B, under a budget of 3.5 KB (§11). After a first draft the owner dropped `plate`, `needle` and `sparkle` (§10). `import { createSnow }` doesn't grow.
 - **M8 · Snow drifts.** The `ground` option and `drift()`: flakes that reach the bottom settle into a layer of snow that builds up (§11).
 - **Later.**
   - `@zimaleto/zima-vue`: Vue 3 component plus a `useSnowfall` composable.
@@ -609,11 +609,11 @@ Decided on 2026-11-07 unless a row gives another date.
 | Repo protection (2026-11-08) | A ruleset on `main`: changes only through PRs, merged only when Lint, Typecheck, Build and size and Test pass on an up-to-date branch; no force push, deletion or bypass, admins included. Squash merge only, with linear history; branches are deleted after merge. Dependabot alerts and security updates, secret scanning with push protection, and private vulnerability reporting are on. |
 | Roadmap (2026-11-11) | After 0.1.0: a performance baseline (M6), more snowflakes (M7) and snow drifts (M8). The Vue and Angular wrappers, snow on page elements and effects beyond snow come later. |
 | Shapes home (2026-11-11) | New shapes are named exports of `@zimaleto/zima`, not a separate package or a subpath. Tree-shaking keeps `createSnow` unchanged however many there are, and fixed versioning would release a separate package in lockstep anyway. The React wrapper's re-export lets Server Components pass them as props, and `crystals()` reuses the core's RNG. |
-| Script build budget (2026-11-11) | The `<script>` build keeps every export in one file. Its budget rises in M7 and M8 to the measured size plus a small margin, about 3.6 KB and 4.2 KB, and each PR states the exact number. M7 measured 3,378 B, so the budget is 3.5 KB. |
+| Script build budget (2026-11-11) | The `<script>` build keeps every export in one file. Its budget rises in M7 and M8 to the measured size plus a small margin, about 3.6 KB and 4.2 KB, and each PR states the exact number. M7 measured 3,395 B, so the budget is 3.5 KB. |
 | Core budget for drifts (2026-11-11) | The drift's hook in the engine may take `import { createSnow }` up to 2.6 KB, after first trying to win the bytes back elsewhere in the engine. The drift itself counts only where it's imported. |
 | Default frame rate (2026-11-15) | `fps` defaults to 100 instead of no cap. With the 10% slack, displays up to 110 Hz draw every frame and faster ones skip frames: 60 fps at 120 Hz, 72 fps at 144 Hz. On the MacBook's 120 Hz display, Chrome spent 16% of a core on the default snow at 120 fps and 10% at 60 fps. `Infinity` draws every frame. A default of 60 was rejected: the cap would give 48 fps at 144 Hz, 45 at 90 Hz and 37.5 at 75 Hz. |
 | M7 shape set (2026-11-17) | After the first draft, the owner kept `dendrite`, `crystals()` and `bokeh` and dropped `plate`, `needle` and `sparkle`, which didn't read as snow. Crystals are drawn delicate, like real ones: arms narrow towards the tip, side branches are thinner than the arm, and nothing sits on the tips. |
-| Playground tests (2026-11-14) | The playground's measuring code (`src/performance/`) has Node unit tests held at 100% coverage, because the baseline's numbers decide engine changes. Since M7 the options logic (`src/options/`, without the color presets, which are only data) is held to the same, because it splits the crystals' weight. Its components stay without tests. `pnpm test` runs them with the libraries' suites. |
+| Playground tests (2026-11-14) | The playground's measuring code (`src/performance/`) has Node unit tests held at 100% coverage, because the baseline's numbers decide engine changes. Since M7 the options logic (`src/options/`, without the presets, which are only data) is held to the same, because it splits the crystals' weight. Its components stay without tests. `pnpm test` runs them with the libraries' suites. |
 
 ---
 
@@ -714,7 +714,7 @@ createSnow({ size: [4, 12], shapes: [...crystals(8), { shape: dendrite, weight: 
 - **Docs and release.** The core README describes each shape and the size it needs. A `minor` changeset.
 - **Results** (2026-11-17).
   - **Owner review.** The first draft also had `plate`, `needle` and `sparkle`, and crystals drawn with even strokes and hexagonal plates at the tips. The owner found too many shapes that didn't look good: the plate read as a hexagon icon, the needle as a dash or rain, the sparkle as a glint rather than snow, and the plates at the tips as lollipops. M7 keeps three shapes and draws the crystals the way real ones look (§10).
-  - **Size.** `import { createSnow }` stays at 2,473 B. The script build grows by 484 B to 3,378 B, so its budget becomes 3.5 KB.
+  - **Size.** `import { createSnow }` stays at 2,473 B. The script build grows by 501 B to 3,395 B, so its budget becomes 3.5 KB.
   - **One drawing for stellar crystals.** `dendrite` and `crystals()` share `drawStellar()` in `stellar.ts`. A design sets the arm width, the number of branch pairs, where they start and how long they are, and the ring around the center; `dendrite` is a fixed design. Arms and branches are filled bars that narrow to 30% of their width, and a branch starts at 70% of the arm's width where it grows. Ice grows side branches at 60°, so every design does too.
   - **Each part gets its own fill.** With the arms and branches in one path, Chrome anti-aliased the overlaps unevenly, and a crystal differed from itself turned upside down by up to 9%. Filled one by one, every shape stays within 1.2%.
   - **Shared helpers.** `drawAround()` draws evenly turned copies, and `traceHexagon()` and `traceStar()` build on it; `traceTaper()` traces the bars. `star` and `crystal` now use them too, which saved 50 B in the script build; both render the same pixels as before.

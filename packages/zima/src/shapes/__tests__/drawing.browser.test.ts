@@ -64,7 +64,7 @@ describe("traceHexagon", () => {
 });
 
 describe("traceStar", () => {
-    test("puts the first tip at the top", () => {
+    test("puts a tip at the top", () => {
         const context = createContext();
 
         traceStar(context, 5, RADIUS, RADIUS * 0.45);

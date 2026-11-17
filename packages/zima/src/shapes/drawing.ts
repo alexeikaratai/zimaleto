@@ -16,7 +16,7 @@ export function traceHexagon(context: CanvasRenderingContext2D, size: number): v
     context.closePath();
 }
 
-/** Adds a star around (0, 0) to the path: `points` tips `outer` away, the first at the top, and corners `inner` away. */
+/** Adds a star around (0, 0) to the path: `points` tips `outer` away, one of them at the top, and corners `inner` away. */
 export function traceStar(context: CanvasRenderingContext2D, points: number, outer: number, inner: number): void {
     const halfTurn = Math.PI / points;
 

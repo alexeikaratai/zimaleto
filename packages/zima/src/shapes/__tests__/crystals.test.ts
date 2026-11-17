@@ -24,12 +24,12 @@ describe("crystals", () => {
         expect(second).toBe(first);
     });
 
-    test("returns other shapes for another seed", () => {
+    test("returns the same array for seeds with the same whole part, which give the same designs", () => {
         const first = crystals(6, 3);
 
-        const second = crystals(6, 4);
+        const second = crystals(6, 3.5);
 
-        expect(second[0]).not.toBe(first[0]);
+        expect(second).toBe(first);
     });
 
     test.each([
@@ -54,6 +54,14 @@ describe("designStellar", () => {
         const second = designMany(4);
 
         expect(second).toStrictEqual(first);
+    });
+
+    test("rolls other designs for another seed", () => {
+        const first = designStellar(createRandom(3));
+
+        const second = designStellar(createRandom(4));
+
+        expect(second).not.toStrictEqual(first);
     });
 
     // A ring of size 0 means none, so only the sizes above 0 count.
