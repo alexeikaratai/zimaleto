@@ -1,34 +1,25 @@
+import { drawAround, styleStroke } from "./drawing";
 import type { Shape } from "./shape";
 
 const ARMS = 6;
-const BRANCH_START = 0.55;
-const BRANCH_LENGTH = 0.3;
-const BRANCH_ANGLE = Math.PI / 4;
 const LINE_WIDTH = 0.12;
+const BRANCH_START = 0.55;
+// The far end of a branch that leaves the arm at 45° and is 0.3 radii long.
+const BRANCH_END_X = BRANCH_START + 0.3 * Math.SQRT1_2;
+const BRANCH_END_Y = 0.3 * Math.SQRT1_2;
 
 /** A six-armed ice crystal with two branches on every arm, drawn with strokes. */
 export const crystal: Shape = (context, radius) => {
-    context.lineWidth = radius * LINE_WIDTH;
-    context.lineCap = "round";
+    styleStroke(context, radius, LINE_WIDTH);
     context.beginPath();
-
-    for (let arm = 0; arm < ARMS; arm += 1) {
-        const angle = (arm * Math.PI * 2) / ARMS;
-        const branchX = Math.cos(angle) * radius * BRANCH_START;
-        const branchY = Math.sin(angle) * radius * BRANCH_START;
-
+    drawAround(context, ARMS, () => {
         context.moveTo(0, 0);
-        context.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+        context.lineTo(radius, 0);
 
         for (const side of [-1, 1]) {
-            const branchAngle = angle + side * BRANCH_ANGLE;
-            context.moveTo(branchX, branchY);
-            context.lineTo(
-                branchX + Math.cos(branchAngle) * radius * BRANCH_LENGTH,
-                branchY + Math.sin(branchAngle) * radius * BRANCH_LENGTH,
-            );
+            context.moveTo(radius * BRANCH_START, 0);
+            context.lineTo(radius * BRANCH_END_X, side * radius * BRANCH_END_Y);
         }
-    }
-
+    });
     context.stroke();
 };

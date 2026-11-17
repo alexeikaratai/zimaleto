@@ -2,10 +2,16 @@ import { describe, expect, test } from "vitest";
 import { hasVisiblePixels } from "../../__tests__/support/canvas";
 import { addContainer } from "../../__tests__/support/dom";
 import { type StartedSnow, startSnow } from "../../__tests__/support/engine";
+import { bokeh } from "../bokeh";
 import { crystal } from "../crystal";
+import { crystals } from "../crystals";
+import { dendrite } from "../dendrite";
 import { dot } from "../dot";
 import { image } from "../image";
+import { needle } from "../needle";
+import { plate } from "../plate";
 import type { Shape } from "../shape";
+import { sparkle } from "../sparkle";
 import { star } from "../star";
 import { text } from "../text";
 
@@ -29,6 +35,12 @@ describe("built-in shapes", () => {
         ["dot", dot],
         ["star", star],
         ["crystal", crystal],
+        ["dendrite", dendrite],
+        ["plate", plate],
+        ["needle", needle],
+        ["bokeh", bokeh],
+        ["sparkle", sparkle],
+        ["crystals", crystals(1)[0] as Shape],
         ["text", text("❄")],
     ])("%s draws visible flakes", (_name, shape) => {
         const { snow, clock } = startSnowWith(shape);
