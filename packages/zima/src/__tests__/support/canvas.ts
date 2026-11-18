@@ -25,6 +25,19 @@ export function opaqueArea(canvas: HTMLCanvasElement): number {
     return area;
 }
 
+/** How opaque a row of device pixels is on average, from 0 to 1, counted from the top. */
+export function rowOpacity(canvas: HTMLCanvasElement, row: number): number {
+    const context = canvas.getContext("2d") as CanvasRenderingContext2D;
+    const { data } = context.getImageData(0, row, canvas.width, 1);
+    let total = 0;
+
+    for (let index = 3; index < data.length; index += 4) {
+        total += (data[index] as number) / 255;
+    }
+
+    return total / canvas.width;
+}
+
 /** Records every flake drawn on the canvas from now on. Call it once per test and canvas. */
 export function recordDrawnFlakes(canvas: HTMLCanvasElement): DrawnFlake[] {
     const context = canvas.getContext("2d") as CanvasRenderingContext2D;

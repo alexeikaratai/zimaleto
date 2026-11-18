@@ -33,6 +33,7 @@ export function Hero() {
 - By default the canvas fills its parent, which needs a `position` other than `static`. `fullscreen` covers the viewport instead; render it near the app root, because an ancestor with a `transform` or `filter` would make it cover that ancestor.
 - Props are every [core option](https://github.com/alexeikaratai/zimaleto/tree/main/packages/zima#options), plus `paused`, `fullscreen` and the attributes of a `<canvas>` such as `className`, `style` and `data-*`. `ref` points to the canvas.
 - `paused` freezes the snow and keeps the last frame on screen.
+- `ground={drift()}` lets the snow pile up at the bottom. `drift()` returns plain data, so calling it inline on every render doesn't reset the drift.
 - A prop change goes to the running snowfall, which is never re-created on re-render. Arrays and weighted shapes compare by value, but functions compare by identity, so define custom shapes outside your components.
 
 ## `useSnowfall()`
@@ -60,7 +61,7 @@ The canvas needs a CSS size. The ref has to hold the element when the component 
 
 ## Next.js and Server Components
 
-The package is marked `"use client"`, so a Server Component can render `<Snowfall>` and pass it the built-in shapes, such as `dendrite` or `bokeh`. `crystals()`, `text()`, `image()` and custom shapes are functions that run in the browser: create them in a client component, as the [Next.js example](https://github.com/alexeikaratai/zimaleto/tree/main/examples/nextjs) does.
+The package is marked `"use client"`, so a Server Component can render `<Snowfall>` and pass it the built-in shapes, such as `dendrite` or `bokeh`. `crystals()`, `drift()`, `text()`, `image()` and custom shapes are functions that run in the browser: create them in a client component, as the [Next.js example](https://github.com/alexeikaratai/zimaleto/tree/main/examples/nextjs) does.
 
 ## Testing your app
 

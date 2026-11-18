@@ -1,3 +1,4 @@
+import type { GroundLayer } from "../ground/ground";
 import { countFlakes, normalizeOptions, reduceMotion, type Settings } from "../options/settings";
 import type { SnowOptions } from "../options/snowOptions";
 import { type Flake, rollFlake, spawnFlake } from "../physics/flake";
@@ -19,6 +20,7 @@ export function createEngine(target: HTMLElement | undefined, initialOptions: Sn
     const [spriteFor, resetSprites] = createSpriteCache(handleShapeReady);
     const flakes: Flake[] = [];
     let options = initialOptions;
+    let ground: GroundLayer | undefined;
     let settings: Settings;
     let random: Random;
     // What the flakes were last rolled from, so updates that don't change their look leave them alone.
@@ -44,12 +46,16 @@ export function createEngine(target: HTMLElement | undefined, initialOptions: Sn
         context.clearRect(0, 0, canvas.width, canvas.height);
     }
 
+    function spriteOf(flake: Flake): HTMLCanvasElement | undefined {
+        return spriteFor(flake.shape, flake.color, settings.size[1] * pixelRatio);
+    }
+
     function draw(): void {
-        const spriteRadius = settings.size[1] * pixelRatio;
         clear();
+        ground?.draw(context);
 
         for (const flake of flakes) {
-            const sprite = spriteFor(flake.shape, flake.color, spriteRadius);
+            const sprite = spriteOf(flake);
 
             if (sprite) {
                 const cos = Math.cos(flake.angle) * pixelRatio;
@@ -90,6 +96,7 @@ export function createEngine(target: HTMLElement | undefined, initialOptions: Sn
             wind: settings.wind + gustAt(animationMs / 1000, settings.gust),
             random,
         });
+        ground?.settle(flakes, stepMs, random, spriteOf);
         draw();
     }
 
@@ -152,6 +159,7 @@ export function createEngine(target: HTMLElement | undefined, initialOptions: Sn
     // It draws even while the loop runs, because resizing the bitmap clears it before the next frame would come.
     function refresh(): void {
         fitCanvas();
+        ground?.fit(width, height, pixelRatio, settings);
         fitFlakes();
         syncLoop();
         draw();
@@ -178,6 +186,7 @@ export function createEngine(target: HTMLElement | undefined, initialOptions: Sn
             }
         }
 
+        ground = options.ground?.start(ground);
         refresh();
     }
 

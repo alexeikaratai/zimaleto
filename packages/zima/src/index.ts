@@ -4,6 +4,8 @@ import type { Snow } from "./engine/snow";
 import type { SnowOptions } from "./options/snowOptions";
 
 export type { Snow } from "./engine/snow";
+export { type DriftOptions, drift } from "./ground/drift";
+export type { Ground, GroundLayer } from "./ground/ground";
 export type { Range, ReducedMotion, SnowOptions } from "./options/snowOptions";
 export { bokeh } from "./shapes/bokeh";
 export { crystal } from "./shapes/crystal";

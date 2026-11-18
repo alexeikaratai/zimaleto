@@ -1,3 +1,4 @@
+import { drift } from "@zimaleto/zima";
 import { describe, expect, test } from "vitest";
 import { isEqual } from "../isEqual";
 import { blankShape } from "./support/snowMock";
@@ -17,6 +18,14 @@ describe("isEqual", () => {
 
     test("tells objects with different fields apart", () => {
         expect(isEqual({ shape: blankShape, weight: 2 }, { shape: blankShape })).toBe(false);
+    });
+
+    test("treats two drift() calls with the same options as equal", () => {
+        expect(isEqual(drift({ depth: 30 }), drift({ depth: 30 }))).toBe(true);
+    });
+
+    test("tells drifts of different depths apart", () => {
+        expect(isEqual(drift({ depth: 30 }), drift({ depth: 40 }))).toBe(false);
     });
 
     test("compares functions by identity", () => {

@@ -1,6 +1,7 @@
 import type { ReactElement, RefObject } from "react";
 import type { TargetMode } from "../options/playgroundOptions";
 import { AmountSection } from "./AmountSection";
+import { DriftSection } from "./DriftSection";
 import { LookSection } from "./LookSection";
 import { MotionSection } from "./MotionSection";
 import { PerformanceSection } from "./performance/PerformanceSection";
@@ -64,6 +65,11 @@ export function Controls({
             <ShapesSection
                 options={options}
                 onOptionsChange={onOptionsChange}
+            />
+            <DriftSection
+                options={options}
+                onOptionsChange={onOptionsChange}
+                onRestart={onRestart}
             />
             <LookSection
                 options={options}

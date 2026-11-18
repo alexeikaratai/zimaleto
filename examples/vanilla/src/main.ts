@@ -1,11 +1,13 @@
-import { createSnow, crystal, dot } from "@zimaleto/zima";
+import { createSnow, crystal, dot, drift } from "@zimaleto/zima";
 import "./style.css";
 
 function setUpHero(hero: HTMLElement, toggle: HTMLButtonElement): void {
-    // Snow inside the header: the engine adds a canvas that fills it and follows its size.
+    // Snow inside the header: the engine adds a canvas that fills it and follows its size, and the snow piles up at
+    // its bottom.
     const snow = createSnow(hero, {
         density: 0.4,
         shapes: [dot, { shape: crystal, weight: 0.3 }],
+        ground: drift({ depth: 32 }),
     });
     let isPaused = false;
 

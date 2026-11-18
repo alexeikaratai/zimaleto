@@ -59,6 +59,7 @@ Every option is optional, and `snow.update()` takes the same ones. A key set to 
 | `opacity` | `[0.6, 1]` | Flake opacity. |
 | `color` | `"#fff"` | One CSS color, or a list to pick from. |
 | `shapes` | `[dot]` | Shapes to pick from, optionally weighted. |
+| `ground` | — | What happens at the bottom: `drift()` lets the snow pile up. Unset, flakes fall out of view and come back at the top. |
 | `parallax` | `true` | Bigger flakes fall faster and look closer. |
 | `fps` | `100` | Frame-rate cap. The default draws every frame on displays up to 100 Hz and skips frames on faster ones (60 fps at 120 Hz), which roughly halves the work there. `Infinity` draws every frame. |
 | `maxDpr` | `2` | Upper limit on the pixel ratio, to spare dense screens. |
@@ -96,6 +97,26 @@ Smaller flakes still fall, but their detail blurs into a dot, so give detailed s
 - A custom shape is any `(context, radius) => void` that draws around (0, 0) with the context's `fillStyle` or `strokeStyle`. It's drawn once per color and cached, so keep the same function rather than creating one per call.
 - `image()` ignores the flake color and shows its flakes once the picture has loaded. `text()` draws a glyph or an emoji; load a web font before the snow starts, or the flakes keep the fallback glyph.
 - Unused shapes are tree-shaken.
+
+## Snow drifts
+
+```ts
+import { createSnow, drift } from "@zimaleto/zima";
+
+createSnow(heroElement, { ground: drift({ depth: 40, melt: 0 }) });
+```
+
+Flakes that reach the bottom of the canvas settle there, and a drift of snow builds up in gentle mounds: at the bottom of the viewport for the page overlay, at the bottom of the element otherwise.
+
+| Option | Default | Meaning |
+|---|---|---|
+| `depth` | `40` | The deepest the snow gets, in CSS px. |
+| `melt` | `0` | How fast it sinks, in px per second. Melting works against the snowfall: a light snow with a fast melt barely builds up, and the drift disappears once the snow stops. |
+
+- More and bigger flakes pile up faster: the default snowfall over a full page fills the default drift in about a minute.
+- The drift is snow-white in the first of your colors, with the flakes that landed on top in their own colors and shapes.
+- It starts empty, keeps its place when the canvas resizes, freezes with `stop()` and goes with `destroy()`. A new `drift()` passed to `update()` keeps the snow that has settled, and `ground: undefined` clears it.
+- `drift()` returns plain data, so one value can serve several snowfalls, each with a drift of its own. Only bundles that import it pay for it, about 0.8 KB.
 
 ## Good to know
 

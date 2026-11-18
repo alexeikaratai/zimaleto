@@ -20,7 +20,7 @@ describe("<script> build", () => {
         await expect(runScriptBuild()).resolves.toBeDefined();
     });
 
-    test("puts createSnow and every shape on the Zimaleto global", async () => {
+    test("puts createSnow, every shape and drift on the Zimaleto global", async () => {
         const { Zimaleto } = await runScriptBuild();
 
         expect(Object.keys(Zimaleto ?? {}).sort()).toStrictEqual([
@@ -30,6 +30,7 @@ describe("<script> build", () => {
             "crystals",
             "dendrite",
             "dot",
+            "drift",
             "image",
             "star",
             "text",
