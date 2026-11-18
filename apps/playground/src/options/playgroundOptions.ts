@@ -1,10 +1,13 @@
-import type { ReducedMotion, SnowOptions } from "@zimaleto/zima-react";
+import { drift, type ReducedMotion, type SnowOptions } from "@zimaleto/zima-react";
 import { INITIAL_SHAPE_WEIGHTS, type ShapeWeights, toShapes } from "./shapes";
 
 /** Every option the playground controls, with ranges kept as `[min, max]` for the sliders. */
 export type PlaygroundOptions = {
     shapeWeights: ShapeWeights;
     crystalCount: number;
+    isDrifting: boolean;
+    driftDepth: number;
+    driftMelt: number;
     count: number;
     density: number | undefined;
     size: [number, number];
@@ -30,6 +33,9 @@ export type TargetMode = "page" | "container" | "canvas";
 export const INITIAL_OPTIONS: PlaygroundOptions = {
     shapeWeights: INITIAL_SHAPE_WEIGHTS,
     crystalCount: 8,
+    isDrifting: false,
+    driftDepth: 40,
+    driftMelt: 0,
     count: 150,
     density: undefined,
     size: [2, 5],
@@ -48,9 +54,14 @@ export const INITIAL_OPTIONS: PlaygroundOptions = {
     seed: undefined,
 };
 
-/** The snow options for the playground state: the weights and the crystal count become the `shapes` list. */
+/**
+ * The snow options for the playground state: the weights and the crystal count become the `shapes` list, and the drift
+ * fields the `ground`.
+ */
 export function toSnowOptions(options: PlaygroundOptions): SnowOptions {
-    const { shapeWeights, crystalCount, ...coreOptions } = options;
+    const { shapeWeights, crystalCount, isDrifting, driftDepth, driftMelt, ...coreOptions } = options;
+    // drift() returns plain data, so a new but equal value on every render doesn't reach the snowfall.
+    const ground = isDrifting ? drift({ depth: driftDepth, melt: driftMelt }) : undefined;
 
-    return { ...coreOptions, shapes: toShapes(shapeWeights, crystalCount) };
+    return { ...coreOptions, shapes: toShapes(shapeWeights, crystalCount), ground };
 }
