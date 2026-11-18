@@ -1,3 +1,4 @@
+import type { Ground } from "../ground/ground";
 import type { Shape, WeightedShape } from "../shapes/shape";
 
 /** A fixed value, or a `[min, max]` range from which each flake picks its own random value. */
@@ -65,6 +66,11 @@ export type SnowOptions = {
      * @defaultValue [dot]
      */
     shapes?: Shape | ReadonlyArray<Shape | WeightedShape> | undefined;
+    /**
+     * What happens to flakes at the bottom of the canvas. Unset, they fall out of view and come back at the top;
+     * `drift()` lets them settle into a layer of snow that builds up. Only bundles that import a ground pay for it.
+     */
+    ground?: Ground | undefined;
     /**
      * Bigger flakes fall faster and are more opaque, which gives a sense of depth.
      * @defaultValue true

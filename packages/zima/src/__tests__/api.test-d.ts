@@ -3,8 +3,11 @@ import {
     createSnow,
     crystal,
     crystals,
+    type DriftOptions,
     dendrite,
     dot,
+    drift,
+    type Ground,
     type Range,
     type Shape,
     type Snow,
@@ -121,5 +124,29 @@ describe("crystals", () => {
 
     test("returns a read-only array, since every call with the same arguments shares it", () => {
         expectTypeOf(crystals).returns.toEqualTypeOf<readonly Shape[]>();
+    });
+});
+
+describe("ground option", () => {
+    test("accepts a drift", () => {
+        expectTypeOf({ ground: drift({ depth: 40 }) }).toExtend<SnowOptions>();
+    });
+
+    test("rejects plain options that didn't come from drift()", () => {
+        expectTypeOf<{ ground: { depth: 40 } }>().not.toExtend<SnowOptions>();
+    });
+});
+
+describe("drift", () => {
+    test("takes optional depth and melt", () => {
+        expectTypeOf<DriftOptions>().toEqualTypeOf<{ depth?: number | undefined; melt?: number | undefined }>();
+    });
+
+    test("can be called without options", () => {
+        expectTypeOf(drift).toBeCallableWith();
+    });
+
+    test("returns a Ground", () => {
+        expectTypeOf(drift).returns.toEqualTypeOf<Ground>();
     });
 });

@@ -40,7 +40,7 @@ Biome is the only formatter and linter: no Prettier, no ESLint. The settings liv
 
 ### Structure
 
-- Group code into folders by module, each with one job: the core has `engine/`, `options/`, `physics/` and `shapes/`, and the playground has `controls/`, `fields/`, `stage/`, `options/` and `performance/`.
+- Group code into folders by module, each with one job: the core has `engine/`, `ground/`, `options/`, `physics/` and `shapes/`, and the playground has `controls/`, `fields/`, `stage/`, `options/` and `performance/`.
 - Keep files under about 300 lines, tests included. Split a file by responsibility before it grows past that.
 - Constants live next to the code that uses them, not in a shared constants file.
 
