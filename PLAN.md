@@ -2,7 +2,7 @@
 
 > Tiny, zero-dependency canvas snowfall. Framework-agnostic TypeScript core + thin framework wrappers (React first; Vue and Angular later).
 
-Status: **0.1.0 released** on 2026-11-11 · **M6 · Performance baseline** merged, released as 0.1.1 by the pending Version PR · **M7 · More snowflakes** in review · Next: **M8 · Snow drifts** (§11) · Last updated: 2026-11-17 · Repo: [alexeikaratai/zimaleto](https://github.com/alexeikaratai/zimaleto) · npm: `@zimaleto/*`
+Status: **0.1.1 released**; **M7 · More snowflakes** merged and waiting in the Version PR for 0.2.0 · **M8 · Snow drifts** in review (§11) · Last updated: 2026-11-18 · Repo: [alexeikaratai/zimaleto](https://github.com/alexeikaratai/zimaleto) · npm: `@zimaleto/*`
 
 Working rules and code style: [CLAUDE.md](CLAUDE.md).
 
@@ -85,6 +85,12 @@ zimaleto/
 │  │  │  │  ├─ sprites.ts      # pre-rendered flake sprites and shape readiness
 │  │  │  │  ├─ clock.ts        # the Clock type and the browser clock
 │  │  │  │  └─ __tests__/      # browser tests by topic: canvas, drawing, resize, lifecycle, timing, …
+│  │  │  ├─ ground/            # what happens at the bottom: drift() (M8)
+│  │  │  │  ├─ ground.ts       # the Ground type and the internal interface the engine calls
+│  │  │  │  ├─ drift.ts        # the public factory: settling, melting and the layer, one drift per snowfall
+│  │  │  │  ├─ heightMap.ts    # pure: settling, the angle of repose, shelter, melting, resampling
+│  │  │  │  ├─ driftLayer.ts   # the cached canvas layer: snow bands, stamps, sinking
+│  │  │  │  └─ __tests__/
 │  │  │  ├─ options/
 │  │  │  │  ├─ snowOptions.ts  # the public option types, with JSDoc
 │  │  │  │  ├─ settings.ts     # defaults, normalization, reduced motion, flake count
@@ -249,6 +255,7 @@ type Snow = {
 | `opacity` | `Range` | `[0.6, 1]` | |
 | `color` | `string \| string[]` | `"#fff"` | One color, or a list from which each flake picks one at random. |
 | `shapes` | `Shape \| Array<Shape \| WeightedShape>` | `[dot]` | Shape variants, optionally weighted. |
+| `ground` | `Ground` | — | What happens at the bottom of the canvas. Unset, flakes fall out of view and respawn at the top; `drift()` lets them settle into a drift (M8, §11). |
 | `parallax` | `boolean` | `true` | Bigger flakes fall faster and are more opaque, which gives a sense of depth. |
 | `fps` | `number` | `100` | Frame-rate cap. The cap allows 10% slack, so 30 fps on a 60 Hz display draws every other frame. The default draws every frame on displays up to 100 Hz and skips frames on faster ones: 60 fps at 120 Hz, 72 fps at 144 Hz. `Infinity` draws every frame. |
 | `maxDpr` | `number` | `2` | Upper limit on devicePixelRatio, to protect performance. |
@@ -287,6 +294,7 @@ type WeightedShape = { shape: Shape; weight: number };
 - **Sprites.** Each `(shape × color)` pair is rendered once to a detached `<canvas>` element at the largest `size` × DPR, with a quarter of the radius as margin so strokes and glyphs that overshoot aren't clipped. The sprite is rounded up to whole pixels, and the shape is drawn at the radius that fills it, so flakes keep their exact size. Sprites are rebuilt whenever the flakes are re-rolled (a change to size, speed, opacity, color, sway, rotation, parallax, seed or shapes), which costs little, and when the DPR changes. Each frame then calls `drawImage` with `setTransform` (translate, rotate, scale), which is much cheaper than drawing paths for every flake.
 - **Wind gusts** are a cheap smooth noise: a sum of two sines with incommensurate frequencies.
 - **Resize.** A `ResizeObserver` refreshes on every report, which sets the canvas backing store to CSS size × `min(devicePixelRatio, maxDpr)`. DPR changes (another screen, browser zoom) trigger the same update.
+- **Ground.** The `ground` option's `start(previous)` gives the engine a ground for the snowfall, which keeps what the previous one gathered if it's the same kind. The engine calls it at three points: `fit()` on every refresh, `settle()` after each step, and `draw()` at the start of each frame, behind the flakes. The interface is internal and can change in any release.
 - **SSR safety.** Nothing touches `window` or `document` when the module is imported; all DOM access happens inside `createSnow()`.
 
 ---
@@ -325,9 +333,10 @@ return <canvas ref={canvasRef} style={{ width: "100%", height: 300 }} />;
 - **Package metadata.** Each package has its own `README.md` and a copy of `LICENSE`, because npm packs only what's inside the package folder. `repository` (with `directory`), `homepage` and `bugs` point to the GitHub repo; npm rejects provenance when `repository.url` doesn't match the repo that publishes.
 - **Core also ships `dist/zimaleto.iife.js`** for `<script>` and CDN use (unpkg, jsDelivr), exposing `window.Zimaleto`. The `unpkg` and `jsdelivr` fields in `package.json` point to it. tsdown builds it from the same entry as a second config, minified and without `Symbol.toStringTag`, and size-limit measures the file as it is (`rolldown: false`).
 - **Size budgets** (size-limit, enforced in CI). A budget is never raised without the owner's approval.
-  - `@zimaleto/zima`, `import { createSnow }` (includes the default `dot`): ≤ 2.5 KB brotli (raised from 2 KB in M2, see §10). It measures 2.47 KB after M7, unchanged by the new shapes.
-  - `@zimaleto/zima`, `<script>` build with every shape: ≤ 3.5 KB brotli (raised from 3 KB in M7, see §10). It measures 3,395 B after M7. M8 raises it again for `drift()`.
-  - `@zimaleto/zima-react`, `import { Snowfall }` excluding core and React: ≤ 650 B brotli (raised from 500 B in M3, see §10)
+  - `@zimaleto/zima`, `import { createSnow }` (includes the default `dot`): ≤ 2.55 KB brotli (raised from 2 KB in M2 and 2.5 KB in M8, see §10). It measures 2,510 B after M8: the ground hook took 37 B.
+  - `@zimaleto/zima`, `import { createSnow, drift }`: ≤ 3.4 KB brotli. It measures 3,347 B, so the drift costs 837 B where it's imported.
+  - `@zimaleto/zima`, `<script>` build with every export: ≤ 4.3 KB brotli (raised from 3 KB in M7 and 3.5 KB in M8, see §10). It measures 4,266 B after M8.
+  - `@zimaleto/zima-react`, `import { Snowfall }` excluding core and React: ≤ 650 B brotli (raised from 500 B in M3, see §10). It measures 604 B after M8.
 - **Versioning.** Changesets in **fixed** mode for the `@zimaleto/zima*` packages while on 0.x (the private playground stays out). One version for all packages is simpler for users.
 - **Publishing.** Four jobs at the end of the CI workflow on `main` release the packages. They're split so that no job holds both a token that writes to GitHub and the OIDC token that stages on npm, and only the stage job builds anything:
   1. **Release plan** runs `scripts/release-plan.sh`. With changesets pending, the mode is `version`. Without changesets, a version that has no git tag yet means `stage`. Otherwise the mode is `none`, as it is for the unreleased `0.0.0`. The tag marks a staged version, because npm doesn't list it until it's approved, so the registry can't tell.
@@ -423,6 +432,8 @@ Tests live in a `__tests__/` folder in the module they test, one file per topic,
   - Values fall in [0, 1).
 - **Shapes:** with a fixed seed, weighted selection follows the weights.
 - **`crystals()`:** it returns `count` shapes, the same array for the same arguments and other shapes for another seed, and a count outside 1–32 or not whole is rounded and clamped. Seeds with the same whole part share an array. Its designs are the same for the same seed, differ for another one, stay within their ranges, and vary the branch pairs and the ring around the center.
+- **Height map:** a flake settles where it's drawn and reports each band it adds; it slides down from a peak; bigger flakes bring more snow; neighbors stay within the angle of repose; no column passes the depth; the part of a flake beside the canvas is ignored; shelter stays within 45–100% and changes slowly; melting lowers every column down to zero; resampling keeps the profile both ways, cuts to a smaller depth, and copes with a map that had no width.
+- **`drift()`:** the defaults, invalid depth and melt normalized, equal plain data for equal options, and no DOM needed to call it.
 - **Entry:** importing `src/index.ts` in Node, with no `window` or `document`, doesn't throw.
 
 ### `@zimaleto/zima`: browser tests (Chromium)
@@ -450,6 +461,11 @@ Tests live in a `__tests__/` folder in the module they test, one file per topic,
   - A live change of the media query is picked up.
 - **`update()`:** changing `color`, `shapes` or the largest `size` rebuilds sprites; changing `wind` doesn't. With a seed, flakes that `update()` adds get places of their own instead of copying the first ones.
 - **`image()`:** flakes with an image shape appear only after the image has loaded, and a picture that fails to load rejects `ready`. A shape whose `ready` rejects is never drawn and causes no unhandled rejection.
+- **Drift** (`drift.browser.test.ts`, fast seeded snow on the manual clock)
+  - It builds an opaque layer at the bottom and stays below its depth.
+  - It doesn't grow while stopped, disappears with `update({ ground: undefined })`, keeps its snow when a new `drift()` changes the depth, and is cut down to a smaller one.
+  - It melts away once the snow stops, stays at the bottom when the canvas grows taller, stretches with a wider one, and is redrawn at a new pixel ratio.
+  - It stays still under `static` reduced motion, gives each snowfall its own drift when they share a value, gathers snow without stamps from shapes that aren't ready, copes with a canvas that has no width, and leaves a canvas target clear after `destroy()`.
 - **Shapes and the sprite contract** (pixel checks on sprites rendered at a 40 px radius, not screenshots)
   - Every built-in shape, and each of `crystals(32)`, draws inside 1.25 radii, so the sprite's border stays transparent.
   - Each built-in shape covers its expected share of its circle, worked out from the geometry where it's simple, and the generated crystals are neither wisps nor blobs.
@@ -476,7 +492,7 @@ Core is mocked with `vi.mock` (one shared mock in `__tests__/support/snowMock.ts
   - `className` and `style` pass through, and `ref` reaches the `<canvas>`.
 - **`useSnowfall(ref)`:** works with a canvas the user owns. A `null` ref is a no-op.
 - **SSR:** `renderToString(<Snowfall />)` returns a `<canvas>` and never touches `window`. This lives in the `*.ssr.test.tsx` file.
-- **`isEqual`:** arrays and `{ shape, weight }` entries compare by content, functions by identity.
+- **`isEqual`:** arrays and `{ shape, weight }` entries compare by content, functions by identity, and two `drift()` calls with the same options are equal.
 
 ### Playground: unit tests (Node)
 
@@ -487,7 +503,7 @@ The playground's components are for trying things out by hand. The numbers of th
 - **Measurements** (fake timers): a reading comes after the settle time and the window, and an abort rejects with its reason, also one that came first.
 - **Capacity search** (a simulated device): it measures the display's rate without flakes, finds the capacity to within 10% or 25 flakes, stops at its ceiling, and counts a frame rate under 95% of the display's as dropping.
 - **Baseline:** the capacity at pixel ratios 1 and 2, then 150, 1,000 and 5,000 flakes at ratio 2.
-- **Options:** shapes with a weight of 0 are left out, the generated crystals share their weight, the gallery labels every shape once, and the playground's own fields stay out of the snow options.
+- **Options:** shapes with a weight of 0 are left out, the generated crystals share their weight, the gallery labels every shape once, the playground's own fields stay out of the snow options, and the drift fields become a `drift()` ground only while it's on.
 
 ### Build checks (`*.dist.test.ts`)
 
@@ -499,6 +515,7 @@ The playground's components are for trying things out by hand. The numbers of th
 - `Range` accepts `number` and `[number, number]`, and rejects `[number]`.
 - Custom functions that match `Shape` are accepted.
 - `crystals()` takes a count and an optional seed and returns a read-only array, which `shapes` accepts as it is or spread among other shapes.
+- `ground` accepts `drift()` and rejects plain options; `drift()` takes optional `depth` and `melt` and returns a `Ground`.
 - `color` accepts a string and a string array.
 - `<Snowfall>` props are core options plus `fullscreen`, `paused` and canvas attributes. Unknown props, `width`, `height` and `children` are type errors, and `color` accepts a list.
 
@@ -560,7 +577,7 @@ A composite action, `.github/actions/setup`, installs pnpm, Node from `.nvmrc` a
 - **M5 · Release 0.1.0.** The `release` job with staged publishing, the release app and the `npm` environment, placeholder packages and trusted publishing (§7), and the first changeset release, `0.1.0`. The npm org already exists. Released on 2026-11-11.
 - **M6 · Performance baseline.** A Performance section in the playground with live frame statistics, a stress test and a baseline run; baseline numbers on the owner's devices (§11). The numbers justified one engine change: `fps` defaults to 100, so 120 Hz and faster displays skip frames (§10). No new public API.
 - **M7 · More snowflakes.** `dendrite`, `bokeh` and the `crystals()` generator in the core, a shape gallery and a preset for the detailed shapes in the playground, and a larger budget for the script build: it measures 3,395 B, under a budget of 3.5 KB (§11). After a first draft the owner dropped `plate`, `needle` and `sparkle` (§10). `import { createSnow }` doesn't grow.
-- **M8 · Snow drifts.** The `ground` option and `drift()`: flakes that reach the bottom settle into a layer of snow that builds up (§11).
+- **M8 · Snow drifts.** The `ground` option and `drift({ depth, melt })`: flakes that reach the bottom settle into a drift of snow that builds up in gentle mounds (§11). A Drift section in the playground, and the vanilla example lets snow pile up on its hero. `import { createSnow }` grows by 37 B to 2,510 B, and the script build measures 4,266 B under 4.3 KB.
 - **Later.**
   - `@zimaleto/zima-vue`: Vue 3 component plus a `useSnowfall` composable.
   - `@zimaleto/zima-angular`: standalone component with signals. It needs ng-packagr and the Angular Package Format, so it's built outside tsdown and wired into Turborepo as its own `build`.
@@ -613,6 +630,8 @@ Decided on 2026-11-07 unless a row gives another date.
 | Core budget for drifts (2026-11-11) | The drift's hook in the engine may take `import { createSnow }` up to 2.6 KB, after first trying to win the bytes back elsewhere in the engine. The drift itself counts only where it's imported. |
 | Default frame rate (2026-11-15) | `fps` defaults to 100 instead of no cap. With the 10% slack, displays up to 110 Hz draw every frame and faster ones skip frames: 60 fps at 120 Hz, 72 fps at 144 Hz. On the MacBook's 120 Hz display, Chrome spent 16% of a core on the default snow at 120 fps and 10% at 60 fps. `Infinity` draws every frame. A default of 60 was rejected: the cap would give 48 fps at 144 Hz, 45 at 90 Hz and 37.5 at 75 Hz. |
 | M7 shape set (2026-11-17) | After the first draft, the owner kept `dendrite`, `crystals()` and `bokeh` and dropped `plate`, `needle` and `sparkle`, which didn't read as snow. Crystals are drawn delicate, like real ones: arms narrow towards the tip, side branches are thinner than the arm, and nothing sits on the tips. |
+| Drift look (2026-11-18) | The drift starts empty and builds up. Its body is filled in the snow's first color, because bands in each flake's color made a mosaic of stripes, and the flakes that land are stamped on top in their own colors and shapes. A slow shelter profile shapes it into gentle mounds instead of a flat band. The owner chose the empty start. |
+| Drift budgets (2026-11-18) | `import { createSnow }` may take up to 2.55 KB, within the 2.6 KB allowed for the hook. The script build's budget is 4.3 KB, approved by the owner over the planned 4.2 KB. The drift has its own entry, `import { createSnow, drift }`, at 3.4 KB. |
 | Playground tests (2026-11-14) | The playground's measuring code (`src/performance/`) has Node unit tests held at 100% coverage, because the baseline's numbers decide engine changes. Since M7 the options logic (`src/options/`, without the presets, which are only data) is held to the same, because it splits the crystals' weight. Its components stay without tests. `pnpm test` runs them with the libraries' suites. |
 
 ---
@@ -803,10 +822,16 @@ createSnow({ ground: drift({ depth: 40 }) });
   - The READMEs explain `ground` and `drift()`.
   - The vanilla example lets snow pile up on its hero.
   - A `minor` changeset.
-- **Open questions for M8.**
-  - Should a new snowfall start with some snow already on the ground? That would match flakes that start spread over the canvas, and give `static` reduced motion a settled scene.
-  - Mobile browsers resize the viewport as the address bar shows and hides. The drift is measured from the bottom, so it should follow, but this needs checking on iOS Safari and on Chrome for Android.
-  - Small flakes stamped onto a solid fill may look grainy. The playground decides between stamps and a smooth fill alone.
+- **Open questions, answered** (2026-11-18).
+  - **A head start: no.** A new snowfall starts with an empty drift, and the owner chose that: the drift building up is the point. Under `static` reduced motion there's no drift.
+  - **Stamps or a smooth fill: both.** With each band filled in its flake's color, snow in several colors piled up as a mosaic of stripes. The body is filled in the first color, with whole-pixel edges so bands meet without seams, and the stamps on top give it a frosty edge in every color.
+  - **Mobile viewports: for the owner to check.** The drift is measured from the bottom, so it follows the viewport as the address bar shows and hides, but this needs checking on iOS Safari and on Chrome for Android.
+- **Results** (2026-11-18).
+  - **Mounds.** A flat band looked like a bar of UI rather than snow. `shelterAt()` gives each column a share from 45% to 100% of the snow it gathers and the depth it holds, from two slow waves about 360 and 1,090 px long, so the drift forms gentle mounds.
+  - **The angle of repose.** Snow lands in parts of at most 2 px per 4 px column, and each part rolls downhill while landing would make the slope steeper than about 27°. Each roll goes strictly downhill, so it ends, and no two neighbors ever differ by more than 2 px.
+  - **How fast it builds.** A flake brings twice its radius squared in column-px. Measured over a 1440 × 900 page with the default snowfall, the lowest 15 px fill within a minute and the drift is close to its mounds' full height after 75 s.
+  - **Size.** The hook took 37 B of `import { createSnow }`, which measures 2,510 B. The drift itself is 837 B, above the 0.5–0.7 KB estimate: object properties don't minify, so the height map became a plain array and the layer a closure, which won back about 90 B.
+  - **The interface.** The engine passes the whole settings to `fit()`, which is shorter than passing the largest radius and the first color, so the internal `GroundLayer` type mentions `Settings`.
 
 ---
 
