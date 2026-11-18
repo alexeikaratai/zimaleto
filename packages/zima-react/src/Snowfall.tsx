@@ -29,6 +29,7 @@ const OPTION_NAMES: Record<keyof SnowfallOptions, true> = {
     opacity: true,
     color: true,
     shapes: true,
+    ground: true,
     parallax: true,
     fps: true,
     maxDpr: true,

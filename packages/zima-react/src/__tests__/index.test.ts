@@ -3,6 +3,10 @@ import { describe, expect, test } from "vitest";
 import * as react from "../index";
 
 describe("package entry", () => {
+    test("re-exports drift(), so users need only this package", () => {
+        expect(react.drift).toBe(core.drift);
+    });
+
     test("re-exports the core shapes, so users need only this package", () => {
         const shapes = [
             react.dot,
