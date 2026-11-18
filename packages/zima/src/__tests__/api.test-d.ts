@@ -2,6 +2,9 @@ import { describe, expectTypeOf, test } from "vitest";
 import {
     createSnow,
     crystal,
+    crystals,
+    dendrite,
+    dot,
     type Range,
     type Shape,
     type Snow,
@@ -99,5 +102,24 @@ describe("shapes option", () => {
 
     test("rejects a weight that isn't a number", () => {
         expectTypeOf<{ shape: Shape; weight: "2" }>().not.toExtend<WeightedShape>();
+    });
+
+    test("accepts the crystals() array as it is", () => {
+        expectTypeOf({ shapes: crystals(8) }).toExtend<SnowOptions>();
+    });
+
+    test("accepts crystals() spread among other shapes", () => {
+        expectTypeOf({ shapes: [...crystals(8), { shape: dendrite, weight: 2 }, dot] }).toExtend<SnowOptions>();
+    });
+});
+
+describe("crystals", () => {
+    test("takes a count and an optional seed", () => {
+        expectTypeOf(crystals).toBeCallableWith(8);
+        expectTypeOf(crystals).toBeCallableWith(8, 3);
+    });
+
+    test("returns a read-only array, since every call with the same arguments shares it", () => {
+        expectTypeOf(crystals).returns.toEqualTypeOf<readonly Shape[]>();
     });
 });

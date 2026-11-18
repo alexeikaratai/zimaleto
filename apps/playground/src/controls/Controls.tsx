@@ -5,8 +5,8 @@ import { LookSection } from "./LookSection";
 import { MotionSection } from "./MotionSection";
 import { PerformanceSection } from "./performance/PerformanceSection";
 import { RenderingSection } from "./RenderingSection";
-import { ShapesSection } from "./ShapesSection";
 import type { SectionProps } from "./sectionProps";
+import { ShapesSection } from "./shapes/ShapesSection";
 import { TargetSection } from "./TargetSection";
 
 export type ControlsProps = SectionProps & {

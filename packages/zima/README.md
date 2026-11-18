@@ -34,7 +34,7 @@ snow.destroy(); // remove the canvas, observers and listeners
 The `<script>` build puts every export on `window.Zimaleto`:
 
 ```html
-<script src="https://unpkg.com/@zimaleto/zima@0.1"></script>
+<script src="https://unpkg.com/@zimaleto/zima@0.2"></script>
 <script>
     Zimaleto.createSnow({ count: 120 });
 </script>
@@ -69,15 +69,30 @@ Every option is optional, and `snow.update()` takes the same ones. A key set to 
 ## Shapes
 
 ```ts
-import { createSnow, crystal, dot, image, star, text } from "@zimaleto/zima";
+import { bokeh, createSnow, crystals, dendrite, dot } from "@zimaleto/zima";
 
 createSnow({
-    shapes: [dot, star, { shape: crystal, weight: 0.3 }, text("❄"), image("/flake.png")],
+    size: [4, 12],
+    shapes: [...crystals(8), { shape: dendrite, weight: 2 }, bokeh, dot],
     color: ["#fff", "#cfe8ff"],
 });
 ```
 
+| Shape | Looks like | Reads from a radius of |
+|---|---|---|
+| `dot` | a filled circle, the default | any size |
+| `star` | a five-pointed star | 3 px |
+| `crystal` | six arms with two branches each | 4 px |
+| `dendrite` | the classic fern-like snowflake: six tapering arms with rows of side branches that shorten towards the tip | 6 px |
+| `bokeh` | an out-of-focus flake, which adds depth when mixed with sharp ones | any size |
+| `crystals(count, seed?)` | `count` different stellar crystals, from 1 to 32: tapering arms with two to four pairs of side branches, some with a hexagonal ring around the center | 6 px |
+| `text(glyph, font?)` | a character or an emoji | depends on the glyph |
+| `image(src)` | a picture in its own colors | depends on the picture |
+
+Smaller flakes still fall, but their detail blurs into a dot, so give detailed shapes a larger `size`.
+
 - A weight makes a shape more or less common; a plain shape weighs 1.
+- `crystals()` returns the same array for the same arguments, so it's safe to call inline, and the designs are the same on every page load. `seed` picks other designs; it's independent of the snow's `seed` option. Each crystal is one more sprite per color, which is why the count stops at 32.
 - A custom shape is any `(context, radius) => void` that draws around (0, 0) with the context's `fillStyle` or `strokeStyle`. It's drawn once per color and cached, so keep the same function rather than creating one per call.
 - `image()` ignores the flake color and shows its flakes once the picture has loaded. `text()` draws a glyph or an emoji; load a web font before the snow starts, or the flakes keep the fallback glyph.
 - Unused shapes are tree-shaken.

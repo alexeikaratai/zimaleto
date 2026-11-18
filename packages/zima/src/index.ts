@@ -5,7 +5,10 @@ import type { SnowOptions } from "./options/snowOptions";
 
 export type { Snow } from "./engine/snow";
 export type { Range, ReducedMotion, SnowOptions } from "./options/snowOptions";
+export { bokeh } from "./shapes/bokeh";
 export { crystal } from "./shapes/crystal";
+export { crystals } from "./shapes/crystals";
+export { dendrite } from "./shapes/dendrite";
 export { dot } from "./shapes/dot";
 export { image } from "./shapes/image";
 export type { Shape, WeightedShape } from "./shapes/shape";

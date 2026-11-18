@@ -24,8 +24,11 @@ describe("<script> build", () => {
         const { Zimaleto } = await runScriptBuild();
 
         expect(Object.keys(Zimaleto ?? {}).sort()).toStrictEqual([
+            "bokeh",
             "createSnow",
             "crystal",
+            "crystals",
+            "dendrite",
             "dot",
             "image",
             "star",

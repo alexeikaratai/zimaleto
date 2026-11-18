@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { isEqual } from "../isEqual";
-import { sparkle } from "./support/snowMock";
+import { blankShape } from "./support/snowMock";
 
 describe("isEqual", () => {
     test("treats new arrays with the same items as equal", () => {
@@ -12,11 +12,11 @@ describe("isEqual", () => {
     });
 
     test("compares weighted shapes field by field", () => {
-        expect(isEqual([{ shape: sparkle, weight: 2 }], [{ shape: sparkle, weight: 2 }])).toBe(true);
+        expect(isEqual([{ shape: blankShape, weight: 2 }], [{ shape: blankShape, weight: 2 }])).toBe(true);
     });
 
     test("tells objects with different fields apart", () => {
-        expect(isEqual({ shape: sparkle, weight: 2 }, { shape: sparkle })).toBe(false);
+        expect(isEqual({ shape: blankShape, weight: 2 }, { shape: blankShape })).toBe(false);
     });
 
     test("compares functions by identity", () => {

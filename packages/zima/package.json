@@ -67,7 +67,7 @@
             "name": "<script> build with every shape",
             "path": "dist/zimaleto.iife.js",
             "rolldown": false,
-            "limit": "3 KB"
+            "limit": "3.5 KB"
         }
     ]
 }
