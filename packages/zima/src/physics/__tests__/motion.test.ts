@@ -1,7 +1,8 @@
 import { describe, expect, test } from "vitest";
 import { createFlake } from "../../__tests__/support/flake";
-import { type Environment, gustAt, limitStep, step, swayOffset } from "../motion";
+import { gustAt, limitStep, step, swayOffset } from "../motion";
 import { createRandom } from "../random";
+import type { Environment } from "../types";
 
 function createEnvironment(overrides: Partial<Environment> = {}): Environment {
     return { width: 100, height: 100, wind: 0, random: createRandom(1), ...overrides };

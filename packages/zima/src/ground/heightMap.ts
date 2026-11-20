@@ -1,13 +1,5 @@
-/** Reports that a column of the height map grew from one height to another, in CSS px. */
-export type Growth = (column: number, from: number, to: number) => void;
-
-/** How wide a column of the height map is, in CSS px. */
-export const COLUMN_WIDTH = 4;
-// The most a column may rise above its neighbor, in CSS px: about 27°, the gentle slope of settled powder.
-const MAX_RISE = 2;
-// How much snow a flake brings, in column-px per px² of its radius. The default snowfall over a 1440 × 900 page
-// lands about 14 flakes a second, which fills the default 40 px drift in about a minute.
-const GROWTH = 2;
+import { COLUMN_WIDTH, GROWTH, MAX_RISE } from "./constants";
+import type { Growth } from "./types";
 
 /**
  * How sheltered a column is, from 0.45 to 1: the share of the snow it gathers and of the depth it holds. Two slow waves,

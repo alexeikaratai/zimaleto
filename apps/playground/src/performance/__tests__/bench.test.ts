@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { type MeasureTiming, measureFrames } from "../bench";
-import type { FrameStats } from "../frameStats";
+import { measureFrames } from "../bench";
+import type { FrameStats, MeasureTiming } from "../types";
 
 const STATS: FrameStats = { frameRate: 60, medianIntervalMs: 16.7, p95IntervalMs: 17.1, workMs: 0.4 };
 const TIMING: MeasureTiming = { settleMs: 500, windowMs: 1500 };

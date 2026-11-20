@@ -4,7 +4,7 @@ import { addContainer } from "../../__tests__/support/dom";
 import { startSnow } from "../../__tests__/support/engine";
 import { stubMediaQueries, stubPixelRatio } from "../../__tests__/support/media";
 import { createDeferred, nextFrame } from "../../__tests__/support/timing";
-import type { Shape } from "../../shapes/shape";
+import type { Shape } from "../../shapes";
 
 describe("shapes and sprites", () => {
     function createShapeSpy(): Shape {

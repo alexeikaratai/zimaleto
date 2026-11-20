@@ -1,17 +1,5 @@
-import type { Flake } from "./flake";
-import type { Random } from "./random";
-
-/** What a step moves the flakes through: the canvas size in CSS px, the wind, and where respawned flakes land. */
-export type Environment = {
-    width: number;
-    height: number;
-    wind: number;
-    random: Random;
-};
-
-/** Longest step, so a stalled tab doesn't make flakes jump. */
-const MAX_STEP_MS = 50;
-const GUST_FREQUENCY = 0.5;
+import { GUST_FREQUENCY, MAX_STEP_MS } from "./constants";
+import type { Environment, Flake } from "./types";
 
 /**
  * How far a frame moves the snow: the time since the last frame, limited so that a stalled tab doesn't make flakes

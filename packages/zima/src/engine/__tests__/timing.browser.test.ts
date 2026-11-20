@@ -3,7 +3,7 @@ import { recordDrawnFlakes } from "../../__tests__/support/canvas";
 import { addContainer } from "../../__tests__/support/dom";
 import { startSnow } from "../../__tests__/support/engine";
 import { stubPixelRatio } from "../../__tests__/support/media";
-import type { SnowOptions } from "../../options/snowOptions";
+import type { SnowOptions } from "../../options";
 
 // One flake that falls straight down at 100 px/s on a canvas tall enough that it never respawns during a test.
 const FALLING_FLAKE: SnowOptions = { count: 1, speed: 100, sway: 0, seed: 2 };

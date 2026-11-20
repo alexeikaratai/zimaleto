@@ -3,7 +3,7 @@ import { hasVisiblePixels, opaqueArea, recordDrawnFlakes } from "../../__tests__
 import { addContainer } from "../../__tests__/support/dom";
 import { startSnow } from "../../__tests__/support/engine";
 import { stubPixelRatio } from "../../__tests__/support/media";
-import type { Shape } from "../../shapes/shape";
+import type { Shape } from "../../shapes";
 
 describe("drawing", () => {
     test("draws visible flakes", () => {

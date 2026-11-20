@@ -1,9 +1,5 @@
 import { type ChangeEvent, type ReactElement, useId } from "react";
-
-export type SelectChoice<Value extends string> = {
-    value: Value;
-    label: string;
-};
+import type { SelectChoice } from "./types";
 
 export type SelectFieldProps<Value extends string> = {
     label: string;

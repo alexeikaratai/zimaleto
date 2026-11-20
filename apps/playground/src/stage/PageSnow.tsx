@@ -1,6 +1,6 @@
 import { Snowfall } from "@zimaleto/zima-react";
 import type { ReactElement } from "react";
-import type { SnowViewProps } from "./snowViewProps";
+import type { SnowViewProps } from "./types";
 
 /** `<Snowfall fullscreen>` over the whole page, above an empty surface that keeps the stage's layout. */
 export function PageSnow({ options, isPaused, canvasRef }: SnowViewProps): ReactElement {

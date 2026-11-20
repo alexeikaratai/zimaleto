@@ -1,23 +1,27 @@
-import { between, createRandom, type Random } from "../physics/random";
-import type { Shape } from "./shape";
-import { drawStellar, type StellarDesign } from "./stellar";
-
-// Each crystal is one more sprite per color, so the count stays small.
-const MAX_COUNT = 32;
-// A single pair looks sparse, and five crowd the arm.
-const MIN_BRANCH_PAIRS = 2;
-const BRANCH_PAIR_CHOICES = 3;
+import { between, createRandom, type Random } from "../physics";
+import {
+    ARM_WIDTHS,
+    BRANCH_LENGTHS,
+    BRANCH_PAIR_CHOICES,
+    BRANCH_STARTS,
+    MAX_CRYSTALS,
+    MIN_BRANCH_PAIRS,
+    RING_CHANCE,
+    RING_SIZES,
+} from "./constants";
+import { drawStellar } from "./stellar";
+import type { Shape, StellarDesign } from "./types";
 
 const crystalSets = new Map<string, readonly Shape[]>();
 
 /** Rolls a crystal's design. Every design reads as a real crystal, because the drawing keeps it symmetric. */
 export function designStellar(random: Random): StellarDesign {
-    const armWidth = between([0.06, 0.1], random());
+    const armWidth = between(ARM_WIDTHS, random());
     const branchPairs = MIN_BRANCH_PAIRS + Math.floor(random() * BRANCH_PAIR_CHOICES);
-    const branchStart = between([0.25, 0.45], random());
-    const branchLength = between([0.25, 0.45], random());
-    const hasRing = random() < 0.5;
-    const ringSize = between([0.15, 0.3], random());
+    const branchStart = between(BRANCH_STARTS, random());
+    const branchLength = between(BRANCH_LENGTHS, random());
+    const hasRing = random() < RING_CHANCE;
+    const ringSize = between(RING_SIZES, random());
 
     return {
         armWidth,
@@ -40,7 +44,7 @@ export function designStellar(random: Random): StellarDesign {
  * @param seed - Picks other designs; only its whole part counts. It's independent of the snow's `seed` option.
  */
 export function crystals(count: number, seed = 0): readonly Shape[] {
-    const length = Math.min(MAX_COUNT, Math.max(1, Math.round(count) || 1));
+    const length = Math.min(MAX_CRYSTALS, Math.max(1, Math.round(count) || 1));
     // The generator keeps only the seed's whole part, so seeds that give the same designs share an array.
     const key = `${length} ${seed >>> 0}`;
     const cached = crystalSets.get(key);

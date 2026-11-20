@@ -40,9 +40,15 @@ Biome is the only formatter and linter: no Prettier, no ESLint. The settings liv
 
 ### Structure
 
-- Group code into folders by module, each with one job: the core has `engine/`, `ground/`, `options/`, `physics/` and `shapes/`, and the playground has `controls/`, `fields/`, `stage/`, `options/` and `performance/`.
+- Group code into folders by module, each with one job: the core has `engine/`, `ground/`, `options/`, `physics/` and `shapes/`; the React wrapper has `components/`, `hooks/` and `options/`; and the playground has `controls/`, `fields/`, `stage/`, `options/` and `performance/`.
+- Every module folder has:
+  - an `index.ts` barrel, its surface for other modules;
+  - a `types.ts` for its types;
+  - a `constants.ts` for its constants;
+  - files of code that hold only code: logic, a hook, or one component with its props type.
+- Code in another module imports through that module's barrel (`../options`). Files in the same module import each other directly (`./settings`), never through their own barrel. A subfolder is part of its parent module: it imports the parent's files directly, and the parent imports it through its barrel. Tests follow the same rules.
+- A constant used by one module lives in that module's `constants.ts`; there's no constants file for a whole package. The core's option defaults are the exception: they stay inline in `normalizeOptions()`, where array constants would cost bytes in every bundle.
 - Keep files under about 300 lines, tests included. Split a file by responsibility before it grows past that.
-- Constants live next to the code that uses them, not in a shared constants file.
 
 ### TypeScript
 

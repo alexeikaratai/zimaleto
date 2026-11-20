@@ -1,5 +1,5 @@
-import type { Flake } from "../../physics/flake";
-import { dot } from "../../shapes/dot";
+import type { Flake } from "../../physics";
+import { dot } from "../../shapes";
 
 /** A flake with plain values: radius 2 at (50, 50), falling at 40 px/s without sway or spin. */
 export function createFlake(overrides: Partial<Flake> = {}): Flake {

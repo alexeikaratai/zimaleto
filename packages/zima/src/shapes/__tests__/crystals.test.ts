@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
-import { createRandom } from "../../physics/random";
+import { createRandom } from "../../physics";
 import { crystals, designStellar } from "../crystals";
-import type { StellarDesign } from "../stellar";
+import type { StellarDesign } from "../types";
 
 function designMany(count: number): StellarDesign[] {
     const random = createRandom(1);

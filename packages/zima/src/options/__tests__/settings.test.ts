@@ -1,9 +1,7 @@
 import { describe, expect, test } from "vitest";
-import { crystal } from "../../shapes/crystal";
-import { dot } from "../../shapes/dot";
-import { star } from "../../shapes/star";
+import { crystal, dot, star } from "../../shapes";
 import { countFlakes, normalizeOptions, reduceMotion } from "../settings";
-import type { SnowOptions } from "../snowOptions";
+import type { SnowOptions } from "../types";
 
 describe("normalizeOptions", () => {
     test("applies the defaults", () => {

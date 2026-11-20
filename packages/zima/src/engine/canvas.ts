@@ -1,7 +1,4 @@
-// A canvas is a replaced element, so inset alone wouldn't stretch it.
-const FILL_STYLE = "inset:0;width:100%;height:100%;pointer-events:none;";
-const CONTAINER_CANVAS_STYLE = `${FILL_STYLE}position:absolute`;
-const PAGE_CANVAS_STYLE = `${FILL_STYLE}position:fixed;z-index:9999`;
+import { CONTAINER_CANVAS_STYLE, PAGE_CANVAS_STYLE } from "./constants";
 
 /**
  * Gets the canvas a snowfall draws on: a canvas target as it is, or a new canvas that fills the target element,

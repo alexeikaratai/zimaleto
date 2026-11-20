@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { labelShapes } from "../../options/shapes";
+import { labelShapes } from "../../options";
 import { ShapeTile } from "./ShapeTile";
 
 export type ShapeGalleryProps = {

@@ -1,29 +1,13 @@
 import type { ReactElement } from "react";
-import type { PlaygroundOptions } from "../../options/playgroundOptions";
-import { formatCount, formatMs } from "./format";
-import type { CanvasSize, LiveStats } from "./useFrameMeter";
+import type { PlaygroundOptions } from "../../options";
+import { NO_VALUE } from "./constants";
+import { describeCanvas, describeFlakes, formatMs } from "./format";
+import type { LiveStats } from "./types";
 
 export type LiveStatsListProps = {
     live: LiveStats;
     options: PlaygroundOptions;
 };
-
-const AREA_PER_DENSITY_UNIT = 100 * 100;
-const NO_VALUE = "—";
-
-function describeFlakes({ count, density }: PlaygroundOptions, { cssWidth, cssHeight }: CanvasSize): string {
-    if (density === undefined) {
-        return formatCount(count);
-    }
-
-    return cssWidth ? formatCount((density * cssWidth * cssHeight) / AREA_PER_DENSITY_UNIT) : NO_VALUE;
-}
-
-function describeCanvas({ bitmapWidth, bitmapHeight }: CanvasSize): string {
-    const megapixels = (bitmapWidth * bitmapHeight) / 1_000_000;
-
-    return bitmapWidth ? `${bitmapWidth} × ${bitmapHeight} px, ${megapixels.toFixed(1)} MP` : NO_VALUE;
-}
 
 /** The live frame statistics, the flake count and the canvas size, with a dash for what can't be measured yet. */
 export function LiveStatsList({ live, options }: LiveStatsListProps): ReactElement {

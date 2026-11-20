@@ -78,22 +78,23 @@ zimaleto/
 │  ├─ zima/                    # @zimaleto/zima (core)
 │  │  ├─ src/
 │  │  │  ├─ index.ts           # public API: createSnow() and the re-exports
-│  │  │  ├─ engine/
+│  │  │  ├─ engine/            # every module: index.ts (its barrel), types.ts, constants.ts, then the code
 │  │  │  │  ├─ engine.ts       # createEngine(): state, frame loop, sizing, options, lifecycle
-│  │  │  │  ├─ snow.ts         # the public Snow type that createSnow() returns
 │  │  │  │  ├─ canvas.ts       # adds or adopts the canvas, styles it, positions the container
 │  │  │  │  ├─ sprites.ts      # pre-rendered flake sprites and shape readiness
-│  │  │  │  ├─ clock.ts        # the Clock type and the browser clock
+│  │  │  │  ├─ clock.ts        # the browser clock
+│  │  │  │  ├─ types.ts        # the public Snow type, the Clock type, the sprite lookup
 │  │  │  │  └─ __tests__/      # browser tests by topic: canvas, drawing, resize, lifecycle, timing, …
 │  │  │  ├─ ground/            # what happens at the bottom: drift() (M8)
-│  │  │  │  ├─ ground.ts       # the Ground type and the internal interface the engine calls
 │  │  │  │  ├─ drift.ts        # the public factory: settling, melting and the layer, one drift per snowfall
 │  │  │  │  ├─ heightMap.ts    # pure: settling, the angle of repose, shelter, melting, resampling
 │  │  │  │  ├─ driftLayer.ts   # the cached canvas layer: snow bands, stamps, sinking
+│  │  │  │  ├─ types.ts        # Ground, the internal GroundLayer the engine calls, DriftOptions, the layer
 │  │  │  │  └─ __tests__/
 │  │  │  ├─ options/
-│  │  │  │  ├─ snowOptions.ts  # the public option types, with JSDoc
 │  │  │  │  ├─ settings.ts     # defaults, normalization, reduced motion, flake count
+│  │  │  │  ├─ numbers.ts      # finiteOr(), positiveOr(), finitePositiveOr(), clamp(): repairs bad numbers
+│  │  │  │  ├─ types.ts        # the public option types, with JSDoc, and the normalized Settings
 │  │  │  │  └─ __tests__/
 │  │  │  ├─ physics/           # pure: no DOM, unit-testable
 │  │  │  │  ├─ flake.ts        # spawning flakes and rolling their look
@@ -103,6 +104,7 @@ zimaleto/
 │  │  │  ├─ shapes/            # one file per export: dot, star, crystal, dendrite, bokeh, crystals(), text(), …
 │  │  │  │  ├─ drawing.ts      # shared helpers: turned copies, hexagons, stars, tapering bars, stroke widths
 │  │  │  │  ├─ stellar.ts      # draws a stellar crystal from its design, for dendrite and crystals()
+│  │  │  │  ├─ constants.ts    # every shape's proportions, and the ranges crystals() picks designs from
 │  │  │  │  └─ __tests__/      # pixel checks of the sprite contract, crystals(), the helpers
 │  │  │  └─ __tests__/
 │  │  │     ├─ index.test.ts           # the entry imports in Node without touching the DOM
@@ -115,15 +117,11 @@ zimaleto/
 │  │  └─ tsdown.config.ts      # two builds: ESM for npm, and the minified IIFE for <script> tags
 │  └─ zima-react/             # @zimaleto/zima-react
 │     ├─ src/
-│     │  ├─ index.ts
-│     │  ├─ Snowfall.tsx
-│     │  ├─ useSnowfall.ts
-│     │  ├─ isEqual.ts         # compares option values by content
+│     │  ├─ index.ts           # "use client", the public API and the core's re-exports
+│     │  ├─ components/        # <Snowfall> and its layout constants
+│     │  ├─ hooks/             # useSnowfall()
+│     │  ├─ options/           # SnowfallOptions, the option names, isEqual(), splitProps()
 │     │  └─ __tests__/
-│     │     ├─ Snowfall.test.tsx
-│     │     ├─ Snowfall.ssr.test.tsx   # server rendering with the real core
-│     │     ├─ useSnowfall.test.tsx
-│     │     ├─ isEqual.test.ts
 │     │     ├─ index.test.ts           # re-exports of the core shapes
 │     │     ├─ directive.dist.test.ts  # the built entry starts with "use client"
 │     │     ├─ props.test-d.ts
@@ -135,12 +133,13 @@ zimaleto/
 │  └─ playground/              # Vite + React app with live option controls; the demo
 │     ├─ src/
 │     │  ├─ controls/          # the side panel: one file per section, and a folder for each section with several
-│     │  │                     # components: performance/, and shapes/ with the gallery
+│     │  │                     # components: performance/ with its hooks, and shapes/ with the gallery
 │     │  ├─ fields/            # form fields: slider, range, select, toggle, color presets
 │     │  ├─ stage/             # the snow for each target: page, element, own canvas
 │     │  ├─ options/           # the playground's options, shapes, color presets and the presets
-│     │  └─ performance/       # the measuring code: frame meter, statistics, capacity search, baseline
-│     └─ vitest.config.ts      # one project: unit (Node), for the measuring code and the options logic
+│     │  ├─ performance/       # the measuring code: frame meter, statistics, capacity search, baseline
+│     │  └─ __tests__/         # App, the entry, and support/: a fake <Snowfall> and a canvas stub
+│     └─ vitest.config.ts      # one project: unit (happy-dom), for the whole app
 └─ examples/
    ├─ vanilla/                 # Vite without a framework: createSnow() on a hero element
    └─ nextjs/                  # Next.js App Router: <Snowfall> from a client component
@@ -333,10 +332,10 @@ return <canvas ref={canvasRef} style={{ width: "100%", height: 300 }} />;
 - **Package metadata.** Each package has its own `README.md` and a copy of `LICENSE`, because npm packs only what's inside the package folder. `repository` (with `directory`), `homepage` and `bugs` point to the GitHub repo; npm rejects provenance when `repository.url` doesn't match the repo that publishes.
 - **Core also ships `dist/zimaleto.iife.js`** for `<script>` and CDN use (unpkg, jsDelivr), exposing `window.Zimaleto`. The `unpkg` and `jsdelivr` fields in `package.json` point to it. tsdown builds it from the same entry as a second config, minified and without `Symbol.toStringTag`, and size-limit measures the file as it is (`rolldown: false`).
 - **Size budgets** (size-limit, enforced in CI). A budget is never raised without the owner's approval.
-  - `@zimaleto/zima`, `import { createSnow }` (includes the default `dot`): ≤ 2.55 KB brotli (raised from 2 KB in M2 and 2.5 KB in M8, see §10). It measures 2,510 B after M8: the ground hook took 37 B.
-  - `@zimaleto/zima`, `import { createSnow, drift }`: ≤ 3.4 KB brotli. It measures 3,347 B, so the drift costs 837 B where it's imported.
-  - `@zimaleto/zima`, `<script>` build with every export: ≤ 4.3 KB brotli (raised from 3 KB in M7 and 3.5 KB in M8, see §10). It measures 4,266 B after M8.
-  - `@zimaleto/zima-react`, `import { Snowfall }` excluding core and React: ≤ 650 B brotli (raised from 500 B in M3, see §10). It measures 604 B after M8.
+  - `@zimaleto/zima`, `import { createSnow }` (includes the default `dot`): ≤ 2.55 KB brotli (raised from 2 KB in M2 and 2.5 KB in M8, see §10). It measures 2,509 B since the module layout (2,510 B after M8, where the ground hook took 37 B).
+  - `@zimaleto/zima`, `import { createSnow, drift }`: ≤ 3.4 KB brotli. It measures 3,367 B since the module layout (3,347 B after M8), so the drift costs 858 B where it's imported.
+  - `@zimaleto/zima`, `<script>` build with every export: ≤ 4.3 KB brotli (raised from 3 KB in M7 and 3.5 KB in M8, see §10). It measures 4,253 B since the module layout (4,266 B after M8).
+  - `@zimaleto/zima-react`, `import { Snowfall }` excluding core and React: ≤ 650 B brotli (raised from 500 B in M3, see §10). It measures 630 B since the module layout, which moved the prop splitting into `splitProps()` (604 B after M8).
 - **Versioning.** Changesets in **fixed** mode for the `@zimaleto/zima*` packages while on 0.x (the private playground stays out). One version for all packages is simpler for users.
 - **Publishing.** Four jobs at the end of the CI workflow on `main` release the packages. They're split so that no job holds both a token that writes to GitHub and the OIDC token that stages on npm, and only the stage job builds anything:
   1. **Release plan** runs `scripts/release-plan.sh`. With changesets pending, the mode is `version`. Without changesets, a version that has no git tag yet means `stage`. Otherwise the mode is `none`, as it is for the unreleased `0.0.0`. The tag marks a staged version, because npm doesn't list it until it's approved, so the registry can't tell.
@@ -397,7 +396,7 @@ Tests live in a `__tests__/` folder in the module they test, one file per topic,
 
 | Pattern | Runs in | Used for |
 |---|---|---|
-| `__tests__/*.test.ts(x)` | Node (core, playground) or happy-dom (react) | unit tests, the bulk of the suite |
+| `__tests__/*.test.ts(x)` | Node (core) or happy-dom (react, playground) | unit tests, the bulk of the suite |
 | `__tests__/*.browser.test.ts` | real Chromium via `@vitest/browser-playwright` | anything that needs a real canvas, observers or rAF |
 | `__tests__/*.ssr.test.tsx` | Node (`// @vitest-environment node`) | server rendering |
 | `__tests__/*.test-d.ts` | Vitest typecheck (`expectTypeOf`) | types of the public API |
@@ -494,9 +493,9 @@ Core is mocked with `vi.mock` (one shared mock in `__tests__/support/snowMock.ts
 - **SSR:** `renderToString(<Snowfall />)` returns a `<canvas>` and never touches `window`. This lives in the `*.ssr.test.tsx` file.
 - **`isEqual`:** arrays and `{ shape, weight }` entries compare by content, functions by identity, and two `drift()` calls with the same options are equal.
 
-### Playground: unit tests (Node)
+### Playground: unit tests (happy-dom)
 
-The playground's components are for trying things out by hand. The numbers of the performance baseline (§11) decide engine changes, though, so the measuring code in `src/performance/` has unit tests, and so does the logic in `src/options/` that turns the panel's state into snow options:
+The whole playground is tested, components included. The numbers of the performance baseline (§11) decide engine changes, so the measuring code in `src/performance/` is tested in detail, and so is the logic in `src/options/` that turns the panel's state into snow options:
 
 - **Frame statistics:** the frame rate, the median and 95th-percentile intervals by nearest rank, a dropped frame, the snow's work per frame, and too few frames to measure.
 - **Frame meter** (a stubbed `requestAnimationFrame` and clock): it reads only the frames of the window, times the page's frame callbacks, keeps a bounded history, and puts `requestAnimationFrame` back.
@@ -504,6 +503,8 @@ The playground's components are for trying things out by hand. The numbers of th
 - **Capacity search** (a simulated device): it measures the display's rate without flakes, finds the capacity to within 10% or 25 flakes, stops at its ceiling, and counts a frame rate under 95% of the display's as dropping.
 - **Baseline:** the capacity at pixel ratios 1 and 2, then 150, 1,000 and 5,000 flakes at ratio 2.
 - **Options:** shapes with a weight of 0 are left out, the generated crystals share their weight, the gallery labels every shape once, the playground's own fields stay out of the snow options, and the drift fields become a `drift()` ground only while it's on.
+- **Components** (Testing Library): every field reports its value, and every section turns its controls into the right option changes. `<Snowfall>` and `useSnowfall()` are replaced by fakes that record what they get, since the wrapper has tests of its own and happy-dom has no canvas; the shape gallery draws on a stubbed 2D context.
+- **Hooks** (fake timers): the frame meter refreshes its statistics twice a second while active and clears them when it stops; the baseline run reports its progress, ends with the baseline, puts the pixel-ratio limit back, and stops when asked, when the tab is hidden, when the snow is paused, and on unmount.
 
 ### Build checks (`*.dist.test.ts`)
 
@@ -522,7 +523,7 @@ The playground's components are for trying things out by hand. The numbers of th
 ### Coverage
 
 - Provider is `@vitest/coverage-v8`, which also works in Chromium browser mode. Reporters: `text` and `lcov`. Only `src/` counts, so the `dist` tests don't skew it.
-- Thresholds are checked by each package's `test` task. It runs all of the package's projects in one Vitest run, so the engine (covered by browser tests) and the physics (covered by unit tests) count together. Both packages and the playground's `src/performance/` are held at 100% statements, branches, functions and lines.
+- Thresholds are checked by each package's `test` task. It runs all of the package's projects in one Vitest run, so the engine (covered by browser tests) and the physics (covered by unit tests) count together. Both packages and the whole playground are held at 100% statements, branches, functions and lines.
 
 ### CI
 
@@ -615,7 +616,9 @@ Decided on 2026-11-07 unless a row gives another date.
 | CI pipeline (2026-11-08) | One workflow with jobs in a strict order: lint → typecheck → build and size → test, then on `main` deploy → release (M5). |
 | React size budget (2026-11-08) | `import { Snowfall }` may take up to 650 B brotli instead of 500 B, measured like the core's `import { createSnow }`. Comparing options by value, telling options from canvas attributes, forwarding `ref` and the layout styles need about 590 B. |
 | Core size budget (2026-11-08) | `import { createSnow }` may take up to 2.5 KB brotli instead of 2 KB. The weighted `shapes` option, the sprite cache and image loading add about 300 B, and the M1 engine alone already filled 2 KB. |
-| Code structure (2026-11-08) | Source is grouped into module folders: `engine/`, `options/`, `physics/` and `shapes/` in the core, features in the playground. Files stay under about 300 lines, constants live next to the code that uses them, and tests sit in each module's `__tests__/`, one file per topic. |
+| Code structure (2026-11-08) | Source is grouped into module folders: `engine/`, `options/`, `physics/` and `shapes/` in the core, features in the playground. Files stay under about 300 lines, and tests sit in each module's `__tests__/`, one file per topic. Constants first lived next to the code that used them; since 2026-11-20 they live in each module's `constants.ts` (Module layout). |
+| Module layout (2026-11-20) | Every module folder has an `index.ts` that is its surface for other modules, a `types.ts` and a `constants.ts`, and its code in files of their own; a component's props type stays in the component's file. Code in another module imports through the barrel, files in the same module import each other directly, and a subfolder counts as part of its parent module, which imports it through its barrel. The React wrapper has `components/`, `hooks/` and `options/`. The core's option defaults stay inline in `normalizeOptions()`: they're its one table, and array constants cost bytes in every bundle. The builds bundle into one file, so barrels cost nothing, but the new declaration order moves brotli by a few bytes either way (§7), and `splitProps()` took 26 B of the React wrapper. |
+| Playground coverage (2026-11-20) | The whole playground is held at 100%, components and hooks included: Testing Library in happy-dom, fakes for `<Snowfall>` and `useSnowfall()`, a stubbed 2D context for the shape gallery, and fake timers for the hooks. Before, only the measuring code and the options logic were covered. |
 | Paused snow (2026-11-08) | `stop()` and `paused` freeze the snow and keep the last frame on screen at any point, including before the first frame. |
 | Warnings and coverage (2026-11-08) | Lint (`--error-on-warnings`) and the build (`failOnWarn: true`) fail on warnings locally too, so `pnpm verify` matches CI. Coverage thresholds are 100% on all four metrics in both packages. |
 | Action pins (2026-11-09) | Every action is pinned to a commit SHA with a version comment before any job gets `id-token: write`; Dependabot updates the pins monthly in one grouped PR. |

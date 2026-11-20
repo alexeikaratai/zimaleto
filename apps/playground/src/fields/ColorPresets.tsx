@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { COLOR_PRESETS, type ColorPreset, PRESET_NAMES } from "../options/colorPresets";
+import { COLOR_PRESETS, type ColorPreset, PRESET_NAMES } from "../options";
 import { ColorPresetButton } from "./ColorPresetButton";
 
 export type ColorPresetsProps = {

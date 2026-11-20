@@ -1,31 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { INITIAL_OPTIONS, type PlaygroundOptions } from "../../options/playgroundOptions";
-import { type Baseline, runBaseline } from "../../performance/baseline";
-import { type Bench, measureFrames, type ReadFrames } from "../../performance/bench";
-
-/** Why a run ended early: the Stop button, a hidden tab, or paused snow. */
-export type StopReason = "stopped" | "hidden" | "paused";
-
-/** What a running baseline is measuring. */
-export type RunProgress = {
-    count: number;
-    maxDpr: number;
-};
-
-/** Where the baseline run is. */
-export type BaselineRun =
-    | { status: "idle" }
-    | ({ status: "running" } & RunProgress)
-    | { status: "done"; baseline: Baseline }
-    | { status: "stopped"; reason: StopReason };
-
-export type BaselineRunOptions = {
-    read: ReadFrames;
-    isPaused: boolean;
-    /** Sets up the snow that the run measures. */
-    onStart: () => void;
-    onOptionsChange: (changes: Partial<PlaygroundOptions>) => void;
-};
+import { INITIAL_OPTIONS } from "../../options";
+import { type Bench, measureFrames, runBaseline } from "../../performance";
+import type { BaselineRun, BaselineRunOptions, RunProgress, StopReason } from "./types";
 
 function toStopReason(reason: unknown): StopReason {
     return reason === "hidden" || reason === "paused" ? reason : "stopped";

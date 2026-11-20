@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
-import { type SelectChoice, SelectField } from "../fields/SelectField";
-import type { TargetMode } from "../options/playgroundOptions";
+import { SelectField } from "../fields";
+import type { TargetMode } from "../options";
+import { MODE_CHOICES } from "./constants";
 import { PanelSection } from "./PanelSection";
 
 export type TargetSectionProps = {
@@ -10,12 +11,6 @@ export type TargetSectionProps = {
     onPausedChange: (isPaused: boolean) => void;
     onRestart: () => void;
 };
-
-const MODE_CHOICES: readonly SelectChoice<TargetMode>[] = [
-    { value: "container", label: "Inside an element" },
-    { value: "canvas", label: "On my own <canvas>" },
-    { value: "page", label: "Over the whole page" },
-];
 
 /** Where the snow falls, and the buttons that pause it or start a new snowfall. */
 export function TargetSection({

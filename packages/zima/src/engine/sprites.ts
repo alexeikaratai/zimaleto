@@ -1,10 +1,6 @@
-import type { Shape } from "../shapes/shape";
-
-/** How far a sprite reaches from the flake's center, in radii, so strokes and glyphs that overshoot aren't cut off. */
-export const SPRITE_EXTENT = 1.25;
-
-/** The sprite for a shape and color, or `undefined` while the shape isn't ready. */
-export type SpriteLookup = (shape: Shape, color: string, radius: number) => HTMLCanvasElement | undefined;
+import type { Shape } from "../shapes";
+import { SPRITE_EXTENT } from "./constants";
+import type { SpriteLookup } from "./types";
 
 /**
  * Draws a shape once, in one color, onto a canvas that every frame then copies from.

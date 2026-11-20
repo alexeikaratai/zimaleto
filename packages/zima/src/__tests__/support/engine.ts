@@ -1,7 +1,7 @@
 import { onTestFinished } from "vitest";
-import { createEngine } from "../../engine/engine";
-import type { Snow } from "../../engine/snow";
-import type { SnowOptions } from "../../options/snowOptions";
+import type { Snow } from "../../engine";
+import { createEngine } from "../../engine";
+import type { SnowOptions } from "../../options";
 import { createManualClock, type ManualClock } from "./clock";
 
 /** A snowfall on a manual clock. */

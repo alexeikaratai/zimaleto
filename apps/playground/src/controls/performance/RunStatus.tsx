@@ -1,16 +1,11 @@
 import type { ReactElement } from "react";
 import { BaselineTable } from "./BaselineTable";
+import { STOP_MESSAGES } from "./constants";
 import { formatCount } from "./format";
-import type { BaselineRun, StopReason } from "./useBaselineRun";
+import type { BaselineRun } from "./types";
 
 export type RunStatusProps = {
     run: BaselineRun;
-};
-
-const STOP_MESSAGES: Record<StopReason, string> = {
-    stopped: "Stopped.",
-    hidden: "Stopped: the tab went to the background. Keep it in front while the baseline runs.",
-    paused: "Stopped: the snow was paused.",
 };
 
 /** What the baseline run is doing: how it works before the first run, its progress, why it stopped, or its results. */

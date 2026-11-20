@@ -1,11 +1,10 @@
+import { STAR_INNER_RADIUS, STAR_POINTS } from "./constants";
 import { traceStar } from "./drawing";
-import type { Shape } from "./shape";
-
-const INNER_RADIUS = 0.45;
+import type { Shape } from "./types";
 
 /** A filled five-pointed star. */
 export const star: Shape = (context, radius) => {
     context.beginPath();
-    traceStar(context, 5, radius, radius * INNER_RADIUS);
+    traceStar(context, STAR_POINTS, radius, radius * STAR_INNER_RADIUS);
     context.fill();
 };

@@ -1,9 +1,7 @@
 import type { ReactElement } from "react";
-import { ColorPresets } from "../fields/ColorPresets";
-import { RangeField } from "../fields/RangeField";
-import { ToggleField } from "../fields/ToggleField";
+import { ColorPresets, RangeField, ToggleField } from "../fields";
 import { PanelSection } from "./PanelSection";
-import type { SectionProps } from "./sectionProps";
+import type { SectionProps } from "./types";
 
 /** How the flakes look: size, opacity, colors and depth. */
 export function LookSection({ options, onOptionsChange }: SectionProps): ReactElement {
