@@ -1,8 +1,7 @@
 import type { ReactElement, RefObject } from "react";
-import type { TargetMode } from "../../options/playgroundOptions";
-import { STRESS_OPTIONS } from "../../options/presets";
+import { STRESS_OPTIONS, type TargetMode } from "../../options";
 import { PanelSection } from "../PanelSection";
-import type { SectionProps } from "../sectionProps";
+import type { SectionProps } from "../types";
 import { LiveStatsList } from "./LiveStatsList";
 import { RunStatus } from "./RunStatus";
 import { useBaselineRun } from "./useBaselineRun";

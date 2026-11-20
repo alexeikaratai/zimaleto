@@ -1,26 +1,7 @@
 import { type RefObject, useEffect, useRef, useState } from "react";
-import type { ReadFrames } from "../../performance/bench";
-import { type FrameMeter, startFrameMeter } from "../../performance/frameMeter";
-import { type FrameStats, NO_FRAMES } from "../../performance/frameStats";
-
-/** The size of the snow's canvas: in CSS px, and in device px for its bitmap. */
-export type CanvasSize = {
-    cssWidth: number;
-    cssHeight: number;
-    bitmapWidth: number;
-    bitmapHeight: number;
-};
-
-/** The frames of the last two seconds and the canvas size, refreshed twice a second. */
-export type LiveStats = {
-    frames: FrameStats;
-    canvas: CanvasSize;
-};
-
-const LIVE_WINDOW_MS = 2000;
-const REFRESH_INTERVAL_MS = 500;
-const NO_CANVAS: CanvasSize = { cssWidth: 0, cssHeight: 0, bitmapWidth: 0, bitmapHeight: 0 };
-const NO_STATS: LiveStats = { frames: NO_FRAMES, canvas: NO_CANVAS };
+import { type FrameMeter, type FrameStats, NO_FRAMES, type ReadFrames, startFrameMeter } from "../../performance";
+import { LIVE_WINDOW_MS, NO_CANVAS, NO_STATS, REFRESH_INTERVAL_MS } from "./constants";
+import type { CanvasSize, LiveStats } from "./types";
 
 function measureCanvas(canvas: HTMLCanvasElement | null): CanvasSize {
     return canvas

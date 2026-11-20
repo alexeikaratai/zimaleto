@@ -1,5 +1,7 @@
 import { describe, expect, test } from "vitest";
-import { type FrameSample, NO_FRAMES, percentile, summarizeFrames } from "../frameStats";
+import { NO_FRAMES } from "../constants";
+import { percentile, summarizeFrames } from "../frameStats";
+import type { FrameSample } from "../types";
 
 function framesAt(times: number[], workMs = 0): FrameSample[] {
     return times.map((time) => ({ time, workMs }));

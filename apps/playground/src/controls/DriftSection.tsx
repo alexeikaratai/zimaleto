@@ -1,8 +1,7 @@
 import type { ReactElement } from "react";
-import { SliderField } from "../fields/SliderField";
-import { ToggleField } from "../fields/ToggleField";
+import { SliderField, ToggleField } from "../fields";
 import { PanelSection } from "./PanelSection";
-import type { SectionProps } from "./sectionProps";
+import type { SectionProps } from "./types";
 
 export type DriftSectionProps = SectionProps & {
     onRestart: () => void;

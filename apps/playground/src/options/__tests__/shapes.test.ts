@@ -1,6 +1,7 @@
 import { bokeh, crystals, dot } from "@zimaleto/zima-react";
 import { describe, expect, test } from "vitest";
-import { INITIAL_SHAPE_WEIGHTS, labelShapes, SHAPE_NAMES, toShapes } from "../shapes";
+import { INITIAL_SHAPE_WEIGHTS, SHAPE_NAMES } from "../constants";
+import { labelShapes, toShapes } from "../shapes";
 
 describe("toShapes", () => {
     test("leaves out shapes with a weight of 0", () => {

@@ -1,14 +1,14 @@
 import type { ReactElement, RefObject } from "react";
-import type { TargetMode } from "../options/playgroundOptions";
+import type { TargetMode } from "../options";
 import { AmountSection } from "./AmountSection";
 import { DriftSection } from "./DriftSection";
 import { LookSection } from "./LookSection";
 import { MotionSection } from "./MotionSection";
-import { PerformanceSection } from "./performance/PerformanceSection";
+import { PerformanceSection } from "./performance";
 import { RenderingSection } from "./RenderingSection";
-import type { SectionProps } from "./sectionProps";
-import { ShapesSection } from "./shapes/ShapesSection";
+import { ShapesSection } from "./shapes";
 import { TargetSection } from "./TargetSection";
+import type { SectionProps } from "./types";
 
 export type ControlsProps = SectionProps & {
     mode: TargetMode;

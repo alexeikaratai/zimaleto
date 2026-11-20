@@ -1,8 +1,7 @@
 import type { ReactElement } from "react";
-import { RangeField } from "../fields/RangeField";
-import { SliderField } from "../fields/SliderField";
+import { RangeField, SliderField } from "../fields";
 import { PanelSection } from "./PanelSection";
-import type { SectionProps } from "./sectionProps";
+import type { SectionProps } from "./types";
 
 /** How the flakes move: fall speed, wind and gusts, sway and spin. */
 export function MotionSection({ options, onOptionsChange }: SectionProps): ReactElement {

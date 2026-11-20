@@ -1,17 +1,8 @@
 import type { ReactElement } from "react";
-import { type SelectChoice, SelectField } from "../fields/SelectField";
-import { SliderField } from "../fields/SliderField";
+import { SelectField, SliderField } from "../fields";
+import { AMOUNT_CHOICES, DEFAULT_DENSITY } from "./constants";
 import { PanelSection } from "./PanelSection";
-import type { SectionProps } from "./sectionProps";
-
-type AmountMode = "count" | "density";
-
-const AMOUNT_CHOICES: readonly SelectChoice<AmountMode>[] = [
-    { value: "count", label: "A fixed count" },
-    { value: "density", label: "Density, per 100×100 px" },
-];
-
-const DEFAULT_DENSITY = 0.6;
+import type { AmountMode, SectionProps } from "./types";
 
 /** How many flakes fall: a fixed count, or a density that follows the canvas area. */
 export function AmountSection({ options, onOptionsChange }: SectionProps): ReactElement {

@@ -1,15 +1,6 @@
-import { type FrameSample, type FrameStats, summarizeFrames } from "./frameStats";
-
-/** A running measurement of the page's frames. */
-export type FrameMeter = {
-    /** Statistics for the frames of the last `windowMs`. */
-    read(windowMs: number): FrameStats;
-    /** Stops measuring and puts the browser's `requestAnimationFrame` back. */
-    stop(): void;
-};
-
-// Four seconds at 240 Hz, longer than any measurement window.
-const HISTORY_SIZE = 1024;
+import { HISTORY_SIZE } from "./constants";
+import { summarizeFrames } from "./frameStats";
+import type { FrameMeter, FrameSample } from "./types";
 
 /**
  * Records when each frame starts, and how long the page's frame callbacks take, which in the playground is the snow's

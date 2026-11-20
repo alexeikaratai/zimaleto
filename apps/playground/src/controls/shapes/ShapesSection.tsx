@@ -1,12 +1,10 @@
 import type { ReactElement } from "react";
-import { SliderField } from "../../fields/SliderField";
-import { DETAILED_OPTIONS } from "../../options/presets";
-import { SHAPE_LABELS, SHAPE_NAMES, type ShapeName } from "../../options/shapes";
+import { SliderField } from "../../fields";
+import { DETAILED_OPTIONS, SHAPE_LABELS, SHAPE_NAMES, type ShapeName } from "../../options";
 import { PanelSection } from "../PanelSection";
-import type { SectionProps } from "../sectionProps";
+import type { SectionProps } from "../types";
+import { FALLBACK_COLOR } from "./constants";
 import { ShapeGallery } from "./ShapeGallery";
-
-const FALLBACK_COLOR = "#ffffff";
 
 /** One weight slider per shape, the number of generated crystals, a preset for the detailed shapes, and a gallery. */
 export function ShapesSection({ options, onOptionsChange }: SectionProps): ReactElement {

@@ -1,27 +1,12 @@
 import type { ReactElement, RefObject } from "react";
-import { type PlaygroundOptions, type TargetMode, toSnowOptions } from "../options/playgroundOptions";
-import { CanvasSnow } from "./CanvasSnow";
-import { ContainerSnow } from "./ContainerSnow";
-import { PageSnow } from "./PageSnow";
-import type { SnowViewProps } from "./snowViewProps";
+import { type PlaygroundOptions, type TargetMode, toSnowOptions } from "../options";
+import { CAPTIONS, VIEWS } from "./constants";
 
 export type SnowStageProps = {
     mode: TargetMode;
     options: PlaygroundOptions;
     isPaused: boolean;
     canvasRef: RefObject<HTMLCanvasElement | null>;
-};
-
-const CAPTIONS: Record<TargetMode, string> = {
-    container: "<Snowfall /> fills its parent, which needs a position other than static.",
-    canvas: "useSnowfall(canvasRef, options) snows on a canvas you render yourself.",
-    page: "<Snowfall fullscreen /> covers the viewport. Clicks pass through it.",
-};
-
-const VIEWS: Record<TargetMode, (props: SnowViewProps) => ReactElement> = {
-    container: ContainerSnow,
-    canvas: CanvasSnow,
-    page: PageSnow,
 };
 
 /** Shows the snow for the chosen target through the React wrapper. */

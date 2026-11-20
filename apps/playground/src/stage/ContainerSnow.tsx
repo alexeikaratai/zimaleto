@@ -1,6 +1,6 @@
 import { Snowfall } from "@zimaleto/zima-react";
 import type { ReactElement } from "react";
-import type { SnowViewProps } from "./snowViewProps";
+import type { SnowViewProps } from "./types";
 
 /** `<Snowfall>` filling an element. */
 export function ContainerSnow({ options, isPaused, canvasRef }: SnowViewProps): ReactElement {

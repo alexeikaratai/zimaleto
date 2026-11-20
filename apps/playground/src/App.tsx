@@ -1,7 +1,7 @@
 import { type ReactElement, useRef, useState } from "react";
-import { Controls } from "./controls/Controls";
-import { INITIAL_OPTIONS, type PlaygroundOptions, type TargetMode } from "./options/playgroundOptions";
-import { SnowStage } from "./stage/SnowStage";
+import { Controls } from "./controls";
+import { INITIAL_OPTIONS, type PlaygroundOptions, type TargetMode } from "./options";
+import { SnowStage } from "./stage";
 
 export function App(): ReactElement {
     const [options, setOptions] = useState<PlaygroundOptions>(INITIAL_OPTIONS);
