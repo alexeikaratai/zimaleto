@@ -3,8 +3,8 @@ import { hasVisiblePixels, rowOpacity } from "../../__tests__/support/canvas";
 import { addCanvas, addContainer } from "../../__tests__/support/dom";
 import { type StartedSnow, startSnow } from "../../__tests__/support/engine";
 import { stubMediaQueries, stubPixelRatio } from "../../__tests__/support/media";
-import type { SnowOptions } from "../../options/snowOptions";
-import { image } from "../../shapes/image";
+import type { SnowOptions } from "../../options";
+import { image } from "../../shapes";
 import { drift } from "../drift";
 
 const WIDTH = 200;

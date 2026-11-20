@@ -1,4 +1,5 @@
-import type { SnowOptions } from "../options/snowOptions";
+import type { SnowOptions } from "../options";
+import type { Shape } from "../shapes";
 
 /** A running snowfall. */
 export type Snow = {
@@ -13,3 +14,12 @@ export type Snow = {
     /** Stops the loop, disconnects observers and removes the canvas it added. Calling it again does nothing. */
     destroy(): void;
 };
+
+/** Where frames come from. The browser clock wraps `requestAnimationFrame`; tests drive frames by hand. */
+export type Clock = {
+    requestFrame(callback: (time: number) => void): number;
+    cancelFrame(handle: number): void;
+};
+
+/** The sprite for a shape and color, or `undefined` while the shape isn't ready. */
+export type SpriteLookup = (shape: Shape, color: string, radius: number) => HTMLCanvasElement | undefined;

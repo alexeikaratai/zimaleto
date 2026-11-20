@@ -8,9 +8,9 @@ import { crystals } from "../crystals";
 import { dendrite } from "../dendrite";
 import { dot } from "../dot";
 import { image } from "../image";
-import type { Shape } from "../shape";
 import { star } from "../star";
 import { text } from "../text";
+import type { Shape } from "../types";
 
 function startSnowWith(shape: Shape): StartedSnow {
     return startSnow({ count: 30, size: [6, 10], seed: 1, shapes: shape }, addContainer(200, 100));

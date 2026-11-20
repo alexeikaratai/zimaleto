@@ -1,33 +1,9 @@
-import { swayOffset } from "../physics/motion";
-import { createDriftLayer, type DriftLayer } from "./driftLayer";
-import type { Ground, GroundLayer } from "./ground";
-import { COLUMN_WIDTH, createHeightMap, melt, resample, settle } from "./heightMap";
-
-/** Options for `drift()`. */
-export type DriftOptions = {
-    /**
-     * The deepest the snow gets, in CSS px.
-     * @defaultValue 40
-     */
-    depth?: number | undefined;
-    /**
-     * How fast the snow sinks, in CSS px per second. Melting works against the snowfall: a light snow with a fast melt
-     * barely builds up, and the drift disappears once the snow stops.
-     * @defaultValue 0
-     */
-    melt?: number | undefined;
-};
-
-type DriftGround = Ground & {
-    depth: number;
-    melt: number;
-};
-
-const DEFAULT_DEPTH = 40;
-// Room above the deepest drift for the flakes stamped on top, in radii of the largest flake.
-const STAMP_ROOM = 2;
-// How far a stamped flake sits above the surface, in radii: mostly on top, a little sunk in.
-const STAMP_LIFT = 0.3;
+import { finitePositiveOr } from "../options";
+import { swayOffset } from "../physics";
+import { COLUMN_WIDTH, DEFAULT_DEPTH, STAMP_LIFT, STAMP_ROOM } from "./constants";
+import { createDriftLayer } from "./driftLayer";
+import { createHeightMap, melt, resample, settle } from "./heightMap";
+import type { DriftGround, DriftLayer, DriftOptions, Ground, GroundLayer } from "./types";
 
 // Keyed by the drifts this module started, so a new drift() value can take over the snow that settled under the old.
 const reconfigure = new WeakMap<GroundLayer, (ground: DriftGround) => void>();
@@ -133,10 +109,6 @@ function startDrift(this: DriftGround, previous: GroundLayer | undefined): Groun
     return createDrift(this);
 }
 
-function positiveOr(value: number | undefined, fallback: number): number {
-    return Number.isFinite(value) && (value as number) > 0 ? (value as number) : fallback;
-}
-
 /**
  * Lets flakes that reach the bottom of the canvas settle into a layer of snow that builds up: the bottom of the
  * viewport for the page overlay, the bottom of the element otherwise. More and bigger flakes pile up faster. It
@@ -148,8 +120,8 @@ function positiveOr(value: number | undefined, fallback: number): number {
  */
 export function drift(options: DriftOptions = {}): Ground {
     const ground: DriftGround = {
-        depth: positiveOr(options.depth, DEFAULT_DEPTH),
-        melt: positiveOr(options.melt, 0),
+        depth: finitePositiveOr(options.depth, DEFAULT_DEPTH),
+        melt: finitePositiveOr(options.melt, 0),
         start: startDrift,
     };
 

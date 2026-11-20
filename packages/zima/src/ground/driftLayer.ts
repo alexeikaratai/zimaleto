@@ -1,21 +1,6 @@
-import { SPRITE_EXTENT } from "../engine/sprites";
-import type { Flake } from "../physics/flake";
-import { COLUMN_WIDTH } from "./heightMap";
-
-/** The drift as a picture: a canvas as wide as the snow's, tall enough for the deepest drift with flakes on top. */
-export type DriftLayer = {
-    canvas: HTMLCanvasElement;
-    pixelRatio: number;
-    /**
-     * Fills a column from one depth of snow to another, in CSS px from the bottom, in the color of the flake that
-     * brought it. The edges snap to whole pixels, so bands that meet leave no seam.
-     */
-    fill(column: number, from: number, to: number, color: string): void;
-    /** Stamps a settled flake as it was drawn, turned and faded, centered `lift` CSS px above the bottom. */
-    stamp(sprite: HTMLCanvasElement, flake: Flake, x: number, lift: number): void;
-    /** Moves the picture down by `amount` CSS px of melting, a whole device pixel at a time. */
-    sink(amount: number): void;
-};
+import { SPRITE_EXTENT } from "../engine";
+import { COLUMN_WIDTH } from "./constants";
+import type { DriftLayer } from "./types";
 
 /**
  * A layer for a canvas `width` CSS px wide and `height` CSS px of drift. It keeps the picture of `previous`, stretched

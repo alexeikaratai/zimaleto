@@ -1,7 +1,5 @@
-import type { Bounds } from "../options/settings";
-
-/** Returns a number in [0, 1). */
-export type Random = () => number;
+import type { Bounds } from "../options";
+import type { Random } from "./types";
 
 /** mulberry32: a tiny seedable generator with a full 2^32 period. */
 export function createRandom(seed: number): Random {

@@ -1,4 +1,4 @@
-import type { Shape } from "./shape";
+import type { Shape } from "./types";
 
 /** A filled circle: the default flake. */
 export const dot: Shape = (context, radius) => {

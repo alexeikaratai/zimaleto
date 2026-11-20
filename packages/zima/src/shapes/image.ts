@@ -1,4 +1,4 @@
-import type { Shape } from "./shape";
+import type { Shape } from "./types";
 
 const shapesBySource = new Map<string, Shape>();
 

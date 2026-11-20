@@ -1,45 +1,7 @@
-import { dot } from "../shapes/dot";
-import type { WeightedShape } from "../shapes/shape";
-import type { Range, ReducedMotion, SnowOptions } from "./snowOptions";
-
-/** Inclusive `[min, max]` bounds with `min <= max`. */
-export type Bounds = [min: number, max: number];
-
-/** Options with defaults applied and bad input fixed. */
-export type Settings = {
-    count: number;
-    density: number | undefined;
-    size: Bounds;
-    speed: Bounds;
-    wind: number;
-    gust: number;
-    sway: Bounds;
-    rotation: Bounds;
-    opacity: Bounds;
-    colors: string[];
-    shapes: WeightedShape[];
-    parallax: boolean;
-    /** Frame-rate cap. Always positive; `Infinity` draws every frame. */
-    fps: number;
-    maxDpr: number;
-    reducedMotion: ReducedMotion;
-    pauseWhenHidden: boolean;
-    seed: number | undefined;
-};
-
-const AREA_PER_DENSITY_UNIT = 100 * 100;
-
-function finiteOr(value: number | undefined, fallback: number): number {
-    return Number.isFinite(value) ? (value as number) : fallback;
-}
-
-function positiveOr(value: number | undefined, fallback: number): number {
-    return (value ?? 0) > 0 ? (value as number) : fallback;
-}
-
-function clamp(value: number, floor: number, ceiling: number): number {
-    return Math.min(Math.max(value, floor), ceiling);
-}
+import { dot, type WeightedShape } from "../shapes";
+import { AREA_PER_DENSITY_UNIT } from "./constants";
+import { clamp, finiteOr, positiveOr } from "./numbers";
+import type { Bounds, Range, ReducedMotion, Settings, SnowOptions } from "./types";
 
 function toBounds(range: Range | undefined, fallback: Bounds, floor = -Infinity, ceiling = Infinity): Bounds {
     const [first, second] = typeof range === "number" ? [range, range] : (range ?? fallback);
@@ -74,6 +36,7 @@ function toReducedMotion(mode: SnowOptions["reducedMotion"]): ReducedMotion {
 export function normalizeOptions(options: SnowOptions): Settings {
     const { density } = options;
 
+    // The defaults stay inline: this is their one table, and array constants would cost bytes in every bundle.
     return {
         count: Math.max(0, Math.round(finiteOr(options.count, 150))),
         density: Number.isFinite(density) ? Math.max(0, density as number) : undefined,

@@ -18,3 +18,16 @@ export type WeightedShape = {
     shape: Shape;
     weight: number;
 };
+
+/** How a stellar crystal looks. Lengths are shares of the radius. */
+export type StellarDesign = {
+    /** How wide each arm is at the center. Arms and branches narrow towards their ends. */
+    armWidth: number;
+    branchPairs: number;
+    /** Where the first pair of side branches leaves the arm. The others follow at equal gaps towards the tip. */
+    branchStart: number;
+    /** How long the first side branches are. The others shorten towards the tip. */
+    branchLength: number;
+    /** How far the corners of a hexagonal ring around the center reach, or 0 for none. */
+    ringSize: number;
+};

@@ -1,8 +1,11 @@
-import type { Ground } from "../ground/ground";
-import type { Shape, WeightedShape } from "../shapes/shape";
+import type { Ground } from "../ground";
+import type { Shape, WeightedShape } from "../shapes";
 
 /** A fixed value, or a `[min, max]` range from which each flake picks its own random value. */
 export type Range = number | readonly [min: number, max: number];
+
+/** Inclusive `[min, max]` bounds with `min <= max`. */
+export type Bounds = [min: number, max: number];
 
 /**
  * What the snow does when the OS asks for reduced motion:
@@ -99,4 +102,26 @@ export type SnowOptions = {
     pauseWhenHidden?: boolean | undefined;
     /** Seeds the random generator, so runs are reproducible in tests and screenshots. */
     seed?: number | undefined;
+};
+
+/** Options with defaults applied and bad input fixed. */
+export type Settings = {
+    count: number;
+    density: number | undefined;
+    size: Bounds;
+    speed: Bounds;
+    wind: number;
+    gust: number;
+    sway: Bounds;
+    rotation: Bounds;
+    opacity: Bounds;
+    colors: string[];
+    shapes: WeightedShape[];
+    parallax: boolean;
+    /** Frame-rate cap. Always positive; `Infinity` draws every frame. */
+    fps: number;
+    maxDpr: number;
+    reducedMotion: ReducedMotion;
+    pauseWhenHidden: boolean;
+    seed: number | undefined;
 };

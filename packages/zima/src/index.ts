@@ -1,21 +1,21 @@
-import { BROWSER_CLOCK } from "./engine/clock";
-import { createEngine } from "./engine/engine";
-import type { Snow } from "./engine/snow";
-import type { SnowOptions } from "./options/snowOptions";
+import { BROWSER_CLOCK, createEngine, type Snow } from "./engine";
+import type { SnowOptions } from "./options";
 
-export type { Snow } from "./engine/snow";
-export { type DriftOptions, drift } from "./ground/drift";
-export type { Ground, GroundLayer } from "./ground/ground";
-export type { Range, ReducedMotion, SnowOptions } from "./options/snowOptions";
-export { bokeh } from "./shapes/bokeh";
-export { crystal } from "./shapes/crystal";
-export { crystals } from "./shapes/crystals";
-export { dendrite } from "./shapes/dendrite";
-export { dot } from "./shapes/dot";
-export { image } from "./shapes/image";
-export type { Shape, WeightedShape } from "./shapes/shape";
-export { star } from "./shapes/star";
-export { text } from "./shapes/text";
+export type { Snow } from "./engine";
+export { type DriftOptions, drift, type Ground, type GroundLayer } from "./ground";
+export type { Range, ReducedMotion, SnowOptions } from "./options";
+export {
+    bokeh,
+    crystal,
+    crystals,
+    dendrite,
+    dot,
+    image,
+    type Shape,
+    star,
+    text,
+    type WeightedShape,
+} from "./shapes";
 
 /**
  * Starts a snowfall over the whole page: a fixed canvas that covers the viewport
