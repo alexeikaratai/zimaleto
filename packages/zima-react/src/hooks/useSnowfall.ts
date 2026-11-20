@@ -1,14 +1,6 @@
-import { createSnow, type Snow, type SnowOptions } from "@zimaleto/zima";
+import { createSnow, type Snow } from "@zimaleto/zima";
 import { type RefObject, useEffect, useRef } from "react";
-import { isEqual } from "./isEqual";
-
-/** Options for `useSnowfall()`: every core option, plus `paused`. */
-export type SnowfallOptions = SnowOptions & {
-    /** Stops the snow while `true` and keeps its last frame on screen; it resumes when `false` again. Reduced motion still applies. */
-    paused?: boolean | undefined;
-};
-
-type OptionValues = Record<string, unknown>;
+import { isEqual, type NamedValues, type SnowfallOptions } from "../options";
 
 /**
  * Runs a snowfall on an element you render, usually your own `<canvas>`, which needs a CSS size.
@@ -24,7 +16,7 @@ type OptionValues = Record<string, unknown>;
  */
 export function useSnowfall(target: RefObject<HTMLElement | null>, { paused, ...options }: SnowfallOptions = {}): void {
     const snowRef = useRef<Snow>(null);
-    const optionsRef = useRef<OptionValues>(options);
+    const optionsRef = useRef<NamedValues>(options);
 
     useEffect(
         function createSnowForTarget() {
@@ -47,10 +39,10 @@ export function useSnowfall(target: RefObject<HTMLElement | null>, { paused, ...
 
     useEffect(function syncOptions() {
         const previous = optionsRef.current;
-        let changes: OptionValues | undefined;
+        let changes: NamedValues | undefined;
 
         for (const key in { ...previous, ...options }) {
-            const value = (options as OptionValues)[key];
+            const value = (options as NamedValues)[key];
             // A removed option comes back as undefined, so the core restores its default.
             if (!isEqual(previous[key], value)) {
                 changes = { ...changes, [key]: value };

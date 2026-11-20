@@ -1,7 +1,7 @@
 import { drift } from "@zimaleto/zima";
 import { describe, expect, test } from "vitest";
+import { blankShape } from "../../__tests__/support/snowMock";
 import { isEqual } from "../isEqual";
-import { blankShape } from "./support/snowMock";
 
 describe("isEqual", () => {
     test("treats new arrays with the same items as equal", () => {

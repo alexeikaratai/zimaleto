@@ -1,4 +1,4 @@
-type Fields = Record<string, unknown>;
+import type { NamedValues } from "./types";
 
 /**
  * Compares option values by content: arrays element by element and objects field by field, so a new but equal
@@ -10,7 +10,7 @@ export function isEqual(first: unknown, second: unknown): boolean {
 
         return (
             keys.length === Object.keys(second).length &&
-            keys.every((key) => isEqual((first as Fields)[key], (second as Fields)[key]))
+            keys.every((key) => isEqual((first as NamedValues)[key], (second as NamedValues)[key]))
         );
     }
 

@@ -11,7 +11,6 @@ export type {
     WeightedShape,
 } from "@zimaleto/zima";
 export { bokeh, crystal, crystals, dendrite, dot, drift, image, star, text } from "@zimaleto/zima";
-export type { SnowfallProps } from "./Snowfall";
-export { Snowfall } from "./Snowfall";
-export type { SnowfallOptions } from "./useSnowfall";
-export { useSnowfall } from "./useSnowfall";
+export { Snowfall, type SnowfallProps } from "./components";
+export { useSnowfall } from "./hooks";
+export type { SnowfallOptions } from "./options";

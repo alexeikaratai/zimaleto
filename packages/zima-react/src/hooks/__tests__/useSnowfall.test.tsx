@@ -1,11 +1,12 @@
 import { cleanup, render } from "@testing-library/react";
 import { type ReactElement, useRef } from "react";
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { type SnowfallOptions, useSnowfall } from "../useSnowfall";
-import { core } from "./support/snowMock";
+import { core } from "../../__tests__/support/snowMock";
+import type { SnowfallOptions } from "../../options";
+import { useSnowfall } from "../useSnowfall";
 
 vi.mock("@zimaleto/zima", async () => {
-    const { core: mockedCore } = await import("./support/snowMock");
+    const { core: mockedCore } = await import("../../__tests__/support/snowMock");
 
     return { createSnow: mockedCore.createSnow };
 });
