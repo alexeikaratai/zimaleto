@@ -5,7 +5,7 @@ export default defineConfig({
         projects: ["packages/*/vitest.config.ts", "apps/playground/vitest.config.ts"],
         coverage: {
             provider: "v8",
-            include: ["packages/*/src/**", "apps/playground/src/performance/**"],
+            include: ["packages/*/src/**", "apps/playground/src/**/*.{ts,tsx}"],
             exclude: ["**/__tests__/**"],
             reporter: ["text", "lcov"],
         },

@@ -1,6 +1,7 @@
 import { dot, drift } from "@zimaleto/zima-react";
 import { describe, expect, test } from "vitest";
-import { INITIAL_OPTIONS, toSnowOptions } from "../playgroundOptions";
+import { INITIAL_OPTIONS } from "../constants";
+import { toSnowOptions } from "../playgroundOptions";
 
 describe("toSnowOptions", () => {
     test("turns the weights into the shapes option", () => {

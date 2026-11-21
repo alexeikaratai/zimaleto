@@ -1,25 +1,8 @@
-import type { Settings } from "../options/settings";
-import type { Shape, WeightedShape } from "../shapes/shape";
-import { between, type Random } from "./random";
-
-/** One flake's state. Positions are in CSS px, angles in radians, speeds per second. */
-export type Flake = {
-    x: number;
-    y: number;
-    radius: number;
-    speed: number;
-    opacity: number;
-    color: string;
-    shape: Shape;
-    swayAmplitude: number;
-    swayFrequency: number;
-    swayPhase: number;
-    angle: number;
-    spin: number;
-};
-
-const RADIANS_PER_DEGREE = Math.PI / 180;
-const FULL_TURN = Math.PI * 2;
+import type { Settings } from "../options";
+import type { Shape, WeightedShape } from "../shapes";
+import { FULL_TURN, RADIANS_PER_DEGREE } from "./constants";
+import { between } from "./random";
+import type { Flake, Random } from "./types";
 
 /** Picks a shape at random, each one as likely as its share of the total weight. */
 export function pickShape(shapes: WeightedShape[], random: Random): Shape {

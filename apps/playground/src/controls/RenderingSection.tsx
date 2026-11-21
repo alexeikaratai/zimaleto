@@ -1,30 +1,8 @@
-import type { ReducedMotion } from "@zimaleto/zima-react";
 import type { ChangeEvent, ReactElement } from "react";
-import { type SelectChoice, SelectField } from "../fields/SelectField";
-import { ToggleField } from "../fields/ToggleField";
+import { SelectField, ToggleField } from "../fields";
+import { DPR_CHOICES, FPS_CHOICES, REDUCED_MOTION_CHOICES } from "./constants";
 import { PanelSection } from "./PanelSection";
-import type { SectionProps } from "./sectionProps";
-
-const FPS_CHOICES: readonly SelectChoice<string>[] = [
-    { value: "default", label: "Default: up to 100 fps" },
-    { value: "Infinity", label: "Every display frame" },
-    { value: "60", label: "60 fps" },
-    { value: "30", label: "30 fps" },
-    { value: "15", label: "15 fps" },
-];
-
-const DPR_CHOICES: readonly SelectChoice<string>[] = [
-    { value: "1", label: "1×" },
-    { value: "1.5", label: "1.5×" },
-    { value: "2", label: "2×" },
-    { value: "3", label: "3×" },
-];
-
-const REDUCED_MOTION_CHOICES: readonly SelectChoice<ReducedMotion>[] = [
-    { value: "static", label: "Static: one still frame" },
-    { value: "reduce", label: "Reduce: half the flakes, slower" },
-    { value: "ignore", label: "Ignore: animate as usual" },
-];
+import type { SectionProps } from "./types";
 
 /** How the snow is drawn: frame rate, pixel ratio, reduced motion, pausing and the random seed. */
 export function RenderingSection({ options, onOptionsChange }: SectionProps): ReactElement {

@@ -1,5 +1,5 @@
-import { renderSprite } from "../../engine/sprites";
-import type { Shape } from "../../shapes/shape";
+import { renderSprite } from "../../engine";
+import type { Shape } from "../../shapes";
 
 /** The radius tests render shapes at, in px: the sprite is 100 px square. */
 export const TEST_RADIUS = 40;

@@ -5,8 +5,8 @@ import { crystal } from "../crystal";
 import { crystals } from "../crystals";
 import { dendrite } from "../dendrite";
 import { dot } from "../dot";
-import type { Shape } from "../shape";
 import { star } from "../star";
+import type { Shape } from "../types";
 
 type NamedShape = [name: string, shape: Shape];
 

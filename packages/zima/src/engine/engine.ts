@@ -1,17 +1,20 @@
-import type { GroundLayer } from "../ground/ground";
-import { countFlakes, normalizeOptions, reduceMotion, type Settings } from "../options/settings";
-import type { SnowOptions } from "../options/snowOptions";
-import { type Flake, rollFlake, spawnFlake } from "../physics/flake";
-import { gustAt, limitStep, step, swayOffset } from "../physics/motion";
-import { createRandom, type Random } from "../physics/random";
+import type { GroundLayer } from "../ground";
+import { countFlakes, normalizeOptions, reduceMotion, type Settings, type SnowOptions } from "../options";
+import {
+    createRandom,
+    type Flake,
+    gustAt,
+    limitStep,
+    type Random,
+    rollFlake,
+    spawnFlake,
+    step,
+    swayOffset,
+} from "../physics";
 import { mountCanvas } from "./canvas";
-import type { Clock } from "./clock";
-import type { Snow } from "./snow";
-import { createSpriteCache, SPRITE_EXTENT } from "./sprites";
-
-// One second minus 10% slack, so a 30 fps cap on a 60 Hz display draws every other frame instead of every third. The
-// default cap of 100 draws every frame on displays up to 110 Hz and skips frames on faster ones.
-const SLACKED_SECOND_MS = 900;
+import { SLACKED_SECOND_MS, SPRITE_EXTENT } from "./constants";
+import { createSpriteCache } from "./sprites";
+import type { Clock, Snow } from "./types";
 
 export function createEngine(target: HTMLElement | undefined, initialOptions: SnowOptions, clock: Clock): Snow {
     const [canvas, unmountCanvas] = mountCanvas(target);

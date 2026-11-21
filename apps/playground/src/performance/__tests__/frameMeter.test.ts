@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import { NO_FRAMES } from "../constants";
 import { startFrameMeter } from "../frameMeter";
-import { NO_FRAMES } from "../frameStats";
 
 type FrameCallback = (time: number) => void;
 

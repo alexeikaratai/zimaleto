@@ -1,9 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { createFlake } from "../../__tests__/support/flake";
-import { normalizeOptions } from "../../options/settings";
-import { crystal } from "../../shapes/crystal";
-import { dot } from "../../shapes/dot";
-import { star } from "../../shapes/star";
+import { normalizeOptions } from "../../options";
+import { crystal, dot, star } from "../../shapes";
 import { pickShape, rollFlake, spawnFlake } from "../flake";
 import { createRandom } from "../random";
 

@@ -1,5 +1,4 @@
-import type { Bench } from "../../performance/bench";
-import type { FrameStats } from "../../performance/frameStats";
+import type { Bench, FrameStats } from "../../performance";
 
 /** The frame rate a simulated device reaches with a flake count and a pixel ratio. */
 export type FrameRateModel = (count: number, maxDpr: number) => number;

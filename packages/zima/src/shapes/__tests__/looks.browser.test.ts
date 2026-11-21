@@ -2,8 +2,8 @@ import { describe, expect, test } from "vitest";
 import { alphaAt, circleShare, renderPixels, type SpritePixels, TEST_RADIUS } from "../../__tests__/support/sprite";
 import { bokeh } from "../bokeh";
 import { dot } from "../dot";
-import type { Shape } from "../shape";
-import { drawStellar, type StellarDesign } from "../stellar";
+import { drawStellar } from "../stellar";
+import type { Shape, StellarDesign } from "../types";
 
 // Bare arms, so nothing but the arm crosses the x-axis.
 const ARMS_ONLY: StellarDesign = {

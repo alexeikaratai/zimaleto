@@ -1,8 +1,4 @@
-/** Where frames come from. The browser clock wraps `requestAnimationFrame`; tests drive frames by hand. */
-export type Clock = {
-    requestFrame(callback: (time: number) => void): number;
-    cancelFrame(handle: number): void;
-};
+import type { Clock } from "./types";
 
 /** Frames from the browser, one per display refresh. */
 export const BROWSER_CLOCK: Clock = {

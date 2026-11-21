@@ -1,4 +1,4 @@
-import type { Shape } from "./shape";
+import type { Shape } from "./types";
 
 const shapesByGlyph = new Map<string, Shape>();
 

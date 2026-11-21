@@ -1,28 +1,6 @@
+import { ARMS, BRANCH_ANGLE, BRANCH_WIDTH, LAST_BRANCH, MIN_HALF_WIDTH, TIP_WIDTH } from "./constants";
 import { drawAround, traceHexagon, traceTaper } from "./drawing";
-
-/** How a stellar crystal looks. Lengths are shares of the radius. */
-export type StellarDesign = {
-    /** How wide each arm is at the center. Arms and branches narrow towards their ends. */
-    armWidth: number;
-    branchPairs: number;
-    /** Where the first pair of side branches leaves the arm. The others follow at equal gaps towards the tip. */
-    branchStart: number;
-    /** How long the first side branches are. The others shorten towards the tip. */
-    branchLength: number;
-    /** How far the corners of a hexagonal ring around the center reach, or 0 for none. */
-    ringSize: number;
-};
-
-const ARMS = 6;
-const LAST_BRANCH = 0.85;
-// Ice grows its side branches at 60° to the arm.
-const BRANCH_ANGLE = Math.PI / 3;
-// A side branch starts thinner than the arm where it grows.
-const BRANCH_WIDTH = 0.7;
-// The share of its base width that an arm or a branch keeps at its end.
-const TIP_WIDTH = 0.3;
-// Half a pixel either side, so the thinnest parts don't fade in small sprites.
-const MIN_HALF_WIDTH = 0.5;
+import type { StellarDesign } from "./types";
 
 /**
  * Draws a crystal with six arms and mirror-symmetric side branches that narrow towards their ends, and an optional

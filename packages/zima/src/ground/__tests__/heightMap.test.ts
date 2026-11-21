@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { COLUMN_WIDTH, createHeightMap, melt, resample, settle, shelterAt } from "../heightMap";
+import { COLUMN_WIDTH } from "../constants";
+import { createHeightMap, melt, resample, settle, shelterAt } from "../heightMap";
 
 const DEPTH = 40;
 // The steepest rise between neighbors that the angle of repose allows, in CSS px.

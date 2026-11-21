@@ -1,4 +1,4 @@
-import type { Clock } from "../../engine/clock";
+import type { Clock } from "../../engine";
 
 /** A clock whose frames run only when a test calls `tick()`. */
 export type ManualClock = Clock & {
